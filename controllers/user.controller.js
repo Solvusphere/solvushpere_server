@@ -27,6 +27,13 @@ const UserController = {
       return res.status(500).send(error, "Internal Server Error");
     }
   },
+  async login(req, res){
+  try {
+    console.log("hello");
+  } catch (error) {
+    console.log(error);
+  }
+  }
 };
 
 module.exports = UserController;
