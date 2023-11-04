@@ -28,10 +28,12 @@ const UserController = {
     }
   },
   async login(req, res){
-  try {
-    
-    let b = 44
-    let conflict = "conflict ndaaaa"
+
+    try {
+      let a = '20'
+      console.log(a + ' answer - 20');
+    console.log("hello");
+    let b =44
   } catch (error) {
     console.log(error);
   }
