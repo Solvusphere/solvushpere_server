@@ -30,10 +30,12 @@ const UserController = {
   async login(req, res){
   try {
     console.log("hello");
+    let b =44
   } catch (error) {
     console.log(error);
   }
   }
+
 };
 
 module.exports = UserController;
