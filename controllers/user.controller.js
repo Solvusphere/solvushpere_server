@@ -28,7 +28,8 @@ const UserController = {
     }
   },
   async login(req, res){
-  try {
+    try {
+    let a='20'
     console.log("hello");
   } catch (error) {
     console.log(error);
