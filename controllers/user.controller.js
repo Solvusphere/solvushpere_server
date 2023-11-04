@@ -29,8 +29,9 @@ const UserController = {
   },
   async login(req, res){
   try {
-    console.log("hello");
-    let b =44
+    
+    let b = 44
+    let conflict = "conflict"
   } catch (error) {
     console.log(error);
   }
