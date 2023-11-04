@@ -7,8 +7,6 @@ const app = express();
 
 app.use(express.json());
 
-// hello 
-// another testing (master)
 
 app.use(morgan("dev"));
 // databse connection
