@@ -12,6 +12,7 @@ const UserController = {
         number: number,
       };
 
+   
       let validating = Validate(userData);
 
       if (!validating.status)
