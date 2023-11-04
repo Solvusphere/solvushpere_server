@@ -31,10 +31,12 @@ const UserController = {
     try {
     let a='20'
     console.log("hello");
+    let b =44
   } catch (error) {
     console.log(error);
   }
   }
+
 };
 
 module.exports = UserController;
