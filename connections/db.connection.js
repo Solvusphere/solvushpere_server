@@ -2,7 +2,7 @@ function DBconnections() {
   const mongoose = require("mongoose");
 
   mongoose
-    .connect("mongodb://0.0.0.0:27017/solution", {
+    .connect("mongodb://0.0.0.0:27017/solvusphere", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
