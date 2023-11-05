@@ -13,15 +13,15 @@ const UserController = {
         password: password,
         number: number,
       };
-      
+   
       let validating = Validate(userData);
-      
+
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
-      
+
       let createUser = new User(userData);
       if (createUser) await createUser.save();
-      
+
       res.status(200).send("Successfully registered");
     } catch (error) {
       console.log(error);
@@ -58,6 +58,7 @@ const UserController = {
   }
   }
 
+ 
 };
 
 module.exports = UserController;
