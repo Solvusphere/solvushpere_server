@@ -1,5 +1,5 @@
-function commonErrors(res, cnt) {
-  return res.status(400).send(cnt);
+function commonErrors(res,stCode, cnt) {
+  return res.status(stCode).send(cnt);
 }
 
 module.exports = {

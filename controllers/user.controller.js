@@ -2,13 +2,18 @@ const { sendEmail } = require("../auth/email/nodemailer.auth");
 const redis = require("../connections/redis.connection");
 const { commonErrors } = require("../middlewares/error/commen.error");
 const User = require("../models/user.model");
-const {
-  LoginValidate,
-  validateOtp,
-  validateEmail,
-} = require("../validations/user.validation");
+const Joi = require("joi");
 const bcrypt = require("bcrypt");
+const { LoginValidate, Validate } = require("../validations/user.validation");
 const Jwt = require("jsonwebtoken");
+const { hashPassword } = require("../utils/bcrypt");
+
+const requirments = {
+  password: Joi.string().min(8).required(),
+  email: Joi.string().email().required(),
+  username: Joi.string().min(3).max(30).required(),
+  otp: Joi.number().required(),
+};
 
 const UserController = {
   async verifyEmail(req, res) {
@@ -18,9 +23,15 @@ const UserController = {
         username: username,
         email: email,
       };
-
-      let validating = validateEmail(userData);
-
+      let validating = Validate(
+        { username: requirments.username, email: requirments.email },
+        userData
+      );
+      let existingEmail = await User.findOne({ email: email });
+      if (existingEmail)
+        return commonErrors(res, 409, {
+          warning: "Your aready registered with this email",
+        });
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
@@ -28,14 +39,14 @@ const UserController = {
       sendEmail(userData.email).then(async (response) => {
         authenticateEmail = response;
         if (authenticateEmail.status == false)
-          return commonErrors(res, { error: "Email is not validated" });
+          return commonErrors(res, 400, { error: "Email is not validated" });
         let OTP = authenticateEmail.otp;
         let userdata = {
           email: userData.email,
           username: userData.username,
           otp: OTP,
         };
-        let savingToredis = await redis.setObject(userdata);
+        let savingToredis = redis.setObject(userdata);
         if (savingToredis == false)
           return res.status(404).send({ error: "Internal server error" });
         res.status(200).send("Successfully registered");
@@ -48,24 +59,72 @@ const UserController = {
 
   async verifyOtp(req, res) {
     try {
-      let enteredotp = req.body.otp;
-      let validatingOtp = validateOtp({ otp: enteredotp });
+      let enteredotp = parseInt(req.body.otp);
+      let validatingOtp = Validate(
+        { otp: requirments.otp },
+        { otp: enteredotp }
+      );
       if (!validatingOtp.status)
-        return commonErrors(res, { error: "Please enter otp" });
+        return commonErrors(res, 400, { error: "Please enter otp" });
       let takeUserdata = await redis.redisGet(`${enteredotp}`);
       if (!takeUserdata)
-        return commonErrors(res, {
+        return commonErrors(res, 400, {
           error: "Invalide Otp,Please resend the otp again ",
         });
       let { otp } = JSON.parse(takeUserdata);
       if (!otp)
-        return commonErrors(res, {
+        return commonErrors(res, 400, {
           error: "Invalide Otp, resend the otp again again ",
         });
       if (otp != enteredotp)
-        return commonErrors(res, { error: "Please cheak your otp " });
+        return commonErrors(res, 400, { error: "Please cheak your otp " });
 
       res.status(200).send("Otp if verified");
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({ error: "Internal Server Error" });
+    }
+  },
+  async registering(req, res) {
+    try {
+      let { password, otp } = req.body;
+      let validating = Validate(
+        { password: requirments.password },
+        { password: password }
+      );
+      if (!validating.status)
+        return commonErrors(res, 404, {
+          error: validating.response[0].message,
+        });
+      let hashingpassword = await hashPassword(password);
+      if (!hashingpassword)
+        return commonErrors(res, 500, {
+          error: "internal server error",
+        });
+      let userdata = await redis.redisGet(otp);
+      if (!userdata)
+        return commonErrors(res, 404, {
+          error: "Otp has been expaired, please sent verify again  ",
+        });
+      let parsing = JSON.parse(userdata);
+      let existingEmail = await User.findOne({ email: parsing.email });
+      if (existingEmail)
+        return commonErrors(res, 409, {
+          warning: "Your aready registered with this email",
+        });
+      let createUser = new User({
+        username: parsing.username,
+        email: parsing.email,
+        password: hashingpassword,
+      });
+      await createUser
+        .save()
+        .then((res) => {})
+        .catch((err) => {
+          throw new Error(err.error.message);
+        });
+      redis.redisDel(otp);
+      res.send(true);
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });
@@ -90,7 +149,7 @@ const UserController = {
       if (!isValidPassword)
         return res.status(400).send("Password Doesn't Match");
       const payload = { _id: user._id, name: user.username, email: user.email };
-
+  
       let token = Jwt.sign(payload, "#$solvusphere$#");
       return res.status(200).send("Login Successfully", token, user);
     } catch (error) {
@@ -98,4 +157,5 @@ const UserController = {
     }
   },
 };
+
 module.exports = UserController;
