@@ -15,7 +15,7 @@ DBconnections();
 
 var db = require("./connections/redis.connection");
 
-app.use("/user", user);
+app.use("/sus/user", user);
 app.listen(3000, () => console.log("connected"));
 
 module.exports = { app };

@@ -23,9 +23,16 @@ client.on("end", function () {
   process.exit();
 });
 
-
 module.exports.redisSet = (key, value) => {
   client.set(key, value);
+};
+
+module.exports.setObject = (data) => {
+  client.set(data.otp, JSON.stringify(data), (err) => {
+    if (err) return false;
+    client.expire(data.otp, 180);
+    return true;
+  });
 };
 
 module.exports.redisGet = (key) => {
