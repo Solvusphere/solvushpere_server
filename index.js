@@ -11,7 +11,7 @@ app.use(morgan("dev"));
 // databse connection
 DBconnections();
 
-app.use("/user", user);
+app.use("sus/user/", user);
 app.listen(3000, () => console.log("connected"));
 
 module.exports = app;
