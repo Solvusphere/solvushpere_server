@@ -1,3 +1,5 @@
+const { sendEmail } = require("../auth/email/nodemailer.auth");
+const redis = require("../connections/redis.connection");
 const User = require("../models/user.model");
 const { Validate,LoginValidate } = require("../validations/user.validation");
 const bcrypt = require('bcrypt')
@@ -6,51 +8,58 @@ const Jwt = require('jsonwebtoken')
 const UserController = {
   async register(req, res) {
     try {
-      const { name, email, number, password } = req.body;
+      const { name, email } = req.body;
       let userData = {
         username: name,
         email: email,
-        password: password,
-        number: number,
       };
-   
       let validating = Validate(userData);
 
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
-      let createUser = new User(userData);
-      if (createUser) await createUser.save();
-
+      let authenticateEmail;
+      sendEmail(userData.email).then(async (response) => {
+        authenticateEmail = response;
+        if (authenticateEmail.status == false)
+          return res.status(400).send({ error: "Email is not validated" });
+        let OTP = authenticateEmail.otp;
+        await redis.redisSet(`${userData.email}:${OTP}`, `${OTP}`);
+        let otp = await redis.redisGet(`${userData.email}:${OTP}`);
+        console.log(otp);
+        setTimeout(async () => {
+          await redis.redisDel(`${userData.email}:${OTP}`);
+        }, 3009);
+      });
       res.status(200).send("Successfully registered");
     } catch (error) {
-      console.log(error);
-
-      return res.status(500).send(error, "Internal Server Error");
+      // console.log(error);
+      return res.status(500).send({ error: "Internal Server Error" });
     }
   },
   async login(req, res){
-  try {
+    try {
     
-    const { email, password } = req.body;
-    const userData = {
-      email: email,
-      password: password
-    }
+      const { email, password } = req.body;
+      const userData = {
+        email: email,
+        password: password
+      }
 
-    const validating = LoginValidate(userData)
-    if (!validating.status)
-      return res.status(400).send(validating.response[0].message);
+      const validating = LoginValidate(userData)
+      if (!validating.status)
+        return res.status(400).send(validating.response[0].message);
     
-    let user = await User.findOne({ email: email });
-    if (!user)
-      return res.status(404).send("User Not Found");
+      let user = await User.findOne({ email: email });
+      if (!user)
+        return res.status(404).send("User Not Found");
 
-    let isValidPassword = bcrypt.compare(password, user.password);
-    if (!isValidPassword)
-      return res.status(400).send("Password Doesn't Match");
-    
-    let token = Jwt.sign({ _id: user._id }, "secret");
+      let isValidPassword = bcrypt.compare(password, user.password);
+      if (!isValidPassword)
+        return res.status(400).send("Password Doesn't Match");
+      const payload = { _id: user._id, name: user.username, email: user.email };
+      
+    let token = Jwt.sign(payload, "#$solvusphere$#");
     return res.status(200).send("Login Successfully",token,user)
     
   } catch (error) {
