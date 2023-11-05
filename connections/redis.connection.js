@@ -19,7 +19,6 @@ client.on("error", function (err) {
 
 client.on("end", function () {
   console.log("\nRedis client disconnected");
-  console.log("Server is going down now...");
   process.exit();
 });
 
