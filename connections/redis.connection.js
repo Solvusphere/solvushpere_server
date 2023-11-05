@@ -1,13 +1,8 @@
-const redis = require("redis");
-
-var client = redis.createClient({
-  port: "6379",
-  host: "127.0.0.1",
-  // password  : 'redispassword',
-});
+var redis = require("redis");
+var client = redis.createClient(6379);
 
 client.on("connect", function () {
-  console.log("Redis Database connected" + "\n");
+  console.log("Redis Database connected");
 });
 
 client.on("reconnecting", function () {
@@ -28,8 +23,26 @@ client.on("end", function () {
   process.exit();
 });
 
+
+module.exports.redisSet = (key, value) => {
+  client.set(key, value);
+};
+
+module.exports.redisGet = (key) => {
+  return new Promise((resolve, reject) => {
+    client.get(key, function (error, result) {
+      if (error) {
+        console.log(error);
+        reject(error);
+      }
+      resolve(result);
+    });
+  });
+};
+module.exports.redisDel = (key) => {
+  client.del(key);
+};
+
 module.exports.close = () => {
   client.quit();
 };
-
-module.exports = client;

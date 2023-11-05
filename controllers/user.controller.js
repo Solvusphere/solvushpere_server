@@ -1,5 +1,5 @@
 const { sendEmail } = require("../auth/email/nodemailer.auth");
-const client = require("../connections/redis.connection");
+const redis = require("../connections/redis.connection");
 const User = require("../models/user.model");
 const { Validate } = require("../validations/user.validation");
 const bcrypt = require("bcrypt");
@@ -18,36 +18,19 @@ const UserController = {
         return res.status(400).send(validating.response[0].message);
 
       let authenticateEmail;
-      sendEmail(userData.email).then((response) => {
+      sendEmail(userData.email).then(async (response) => {
         authenticateEmail = response;
         if (authenticateEmail.status == false)
           return res.status(400).send({ error: "Email is not validated" });
-
         let OTP = authenticateEmail.otp;
-        client.set(`${userData.email}:${OTP}`, `${OTP}`).then((ress) => {
-          console.log(ress);
-        });
-        client.get(`${userData.email}:${OTP}`, (err, res) => {
-          if (err) {
-            console.error(err);
-          } else {
-            console.log(res + " OTP");
-          }
-        });
-        //  setTimeout(() => {
-        //    client.del(`${userData.email}:${OTP}`, (err, result) => {
-        //      if (err) {
-        //        console.error(err);
-        //      } else {
-        //        console.log(result);
-        //      }
-
-        //      // Now you can close the client
-        //      client.quit();
-        //    });
-        //  }, 30000);
-        res.status(200).send("Successfully registered");
+        await redis.redisSet(`${userData.email}:${OTP}`, `${OTP}`);
+        let otp = await redis.redisGet(`${userData.email}:${OTP}`);
+        console.log(otp);
+        setTimeout(async () => {
+          await redis.redisDel(`${userData.email}:${OTP}`);
+        }, 3009);
       });
+      res.status(200).send("Successfully registered");
     } catch (error) {
       // console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });

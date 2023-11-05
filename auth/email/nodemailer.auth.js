@@ -32,7 +32,6 @@ function sendEmail(to) {
         console.log(error);
         reject({ status: false });
       } else {
-        
         console.log(`Email sent successfully!`);
         resolve({ otp: OTP, status: true });
       }
