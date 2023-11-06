@@ -1,7 +1,7 @@
 const { sendEmail } = require("../auth/email/nodemailer.auth");
 const redis = require("../connections/redis.connection");
 const { commonErrors } = require("../middlewares/error/commen.error");
-const User = require("../models/user.model");
+const User = require("../models/users.model");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const { LoginValidate, Validate } = require("../validations/user.validation");
