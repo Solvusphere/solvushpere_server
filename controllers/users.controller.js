@@ -56,7 +56,6 @@ const UserController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-
   async verifyOtp(req, res) {
     try {
       let enteredotp = parseInt(req.body.otp);
@@ -149,7 +148,7 @@ const UserController = {
       if (!isValidPassword)
         return res.status(400).send("Password Doesn't Match");
       const payload = { _id: user._id, name: user.username, email: user.email };
-  
+
       let token = Jwt.sign(payload, "#$solvusphere$#");
       return res.status(200).send("Login Successfully", token, user);
     } catch (error) {
@@ -157,5 +156,4 @@ const UserController = {
     }
   },
 };
-
 module.exports = UserController;
