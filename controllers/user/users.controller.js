@@ -140,22 +140,31 @@ const UserController = {
         password: password,
       };
 
-      const validating = LoginValidate(userData);
+
+      const validating = Validate(
+        { email:requirments.email,password: requirments.password },
+       userData
+      );
+
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
       let user = await User.findOne({ email: email });
-      if (!user) return res.status(404).send("User Not Found");
+      if (!user) return commonErrors(res, 404, {
+        message: "User Not Found"
+      }); 
 
       let isValidPassword = bcrypt.compare(password, user.password);
       if (!isValidPassword)
-        return res.status(400).send("Password Doesn't Match");
+        return commonErrors(res,400,{message:"Password Doesn't Match"})
       const payload = { _id: user._id, name: user.username, email: user.email };
 
       let token = Jwt.sign(payload, "#$solvusphere$#");
-      return res.status(200).send("Login Successfully", token, user);
+      return commonErrors(res,200,{message:"Login Successfully", token, user})
     } catch (error) {
       console.log(error);
+      return commonErrors(res,500,{message:"Internal Server Error"})
+
     }
   },
 };
