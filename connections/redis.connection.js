@@ -19,13 +19,19 @@ client.on("error", function (err) {
 
 client.on("end", function () {
   console.log("\nRedis client disconnected");
-  console.log("Server is going down now...");
   process.exit();
 });
 
-
 module.exports.redisSet = (key, value) => {
   client.set(key, value);
+};
+
+module.exports.setObject = (data) => {
+  client.set(data.otp, JSON.stringify(data), (err) => {
+    if (err) return false;
+    client.expire(data.otp, 180);
+    return true;
+  });
 };
 
 module.exports.redisGet = (key) => {
