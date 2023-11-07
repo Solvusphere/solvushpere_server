@@ -13,7 +13,7 @@ app.use(morgan("dev"));
 DBconnections();
 // database connection end
 
-app.use("/sus/user", user);
+app.use("/user", user);
 app.listen(process.env.PORT || 3000, () => console.log("connected"));
 
 module.exports = app;

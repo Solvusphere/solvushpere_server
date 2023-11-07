@@ -1,12 +1,15 @@
-const { sendEmail } = require("../auth/email/nodemailer.auth");
-const redis = require("../connections/redis.connection");
-const { commonErrors } = require("../middlewares/error/commen.error");
-const User = require("../models/users.model");
+const { sendEmail } = require("../../auth/email/nodemailer.auth");
+const redis = require("../../connections/redis.connection");
+const { commonErrors } = require("../../middlewares/error/commen.error");
+const User = require("../../models/users.model");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
-const { LoginValidate, Validate } = require("../validations/user.validation");
+const {
+  LoginValidate,
+  Validate,
+} = require("../../validations/user.validation");
 const Jwt = require("jsonwebtoken");
-const { hashPassword } = require("../utils/bcrypt");
+const { hashPassword } = require("../../utils/bcrypt");
 
 const requirments = {
   password: Joi.string().min(8).required(),
