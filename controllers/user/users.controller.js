@@ -48,6 +48,7 @@ const UserController = {
           email: userData.email,
           username: userData.username,
           otp: OTP,
+          verified:false
         };
         let savingToredis = redis.setObject(userdata);
         if (savingToredis == false)
@@ -73,15 +74,13 @@ const UserController = {
         return commonErrors(res, 400, {
           error: "Invalide Otp,Please resend the otp again ",
         });
-      let { otp } = JSON.parse(takeUserdata);
-      if (!otp)
-        return commonErrors(res, 400, {
-          error: "Invalide Otp, resend the otp again again ",
+      let varifyingotp = await verifyOtp(otp);
+      if (varifyingotp.status == false)
+        return commonErrors(res, 404, {
+          message: varifyingotp.message,
         });
-      if (otp != enteredotp)
-        return commonErrors(res, 400, { error: "Please cheak your otp " });
 
-      res.status(200).send("Otp if verified");
+        res.send(varifyingotp.message);
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });
@@ -140,31 +139,34 @@ const UserController = {
         password: password,
       };
 
-
       const validating = Validate(
-        { email:requirments.email,password: requirments.password },
-       userData
+        { email: requirments.email, password: requirments.password },
+        userData
       );
 
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
       let user = await User.findOne({ email: email });
-      if (!user) return commonErrors(res, 404, {
-        message: "User Not Found"
-      }); 
+      if (!user)
+        return commonErrors(res, 404, {
+          message: "User Not Found",
+        });
 
       let isValidPassword = bcrypt.compare(password, user.password);
       if (!isValidPassword)
-        return commonErrors(res,400,{message:"Password Doesn't Match"})
+        return commonErrors(res, 400, { message: "Password Doesn't Match" });
       const payload = { _id: user._id, name: user.username, email: user.email };
 
       let token = Jwt.sign(payload, "#$solvusphere$#");
-      return commonErrors(res,200,{message:"Login Successfully", token, user})
+      return commonErrors(res, 200, {
+        message: "Login Successfully",
+        token,
+        user,
+      });
     } catch (error) {
       console.log(error);
-      return commonErrors(res,500,{message:"Internal Server Error"})
-
+      return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
 };
