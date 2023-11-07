@@ -1,7 +1,6 @@
 const Company = require("../../models/compaies.model");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
-const { Validate } = require("../../validations/user.validation");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const User = require("../../models/users.model");
 const { sendEmail } = require("../../auth/email/nodemailer.auth");
@@ -14,10 +13,8 @@ const {
   redisGet,
 } = require("../../connections/redis.connection");
 const { verifyOtp } = require("../../auth/email/otp.auth");
-const { hashPassword } = require("../../utils/bcrypt");
 const Jwt = require('jsonwebtoken')
 const Redis = require("../../connections/redis.connection")
-const { commonErrors } = require('../../middlewares/error/commen.error')
 const { hashPassword, campare } = require('../../utils/bcrypt')
 const { validateOtp, Validate } = require('../../validations/company.validation')
 
