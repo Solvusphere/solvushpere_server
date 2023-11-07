@@ -1,12 +1,15 @@
-const { sendEmail } = require("../auth/email/nodemailer.auth");
-const redis = require("../connections/redis.connection");
-const { commonErrors } = require("../middlewares/error/commen.error");
-const User = require("../models/users.model");
+const { sendEmail } = require("../../auth/email/nodemailer.auth");
+const redis = require("../../connections/redis.connection");
+const { commonErrors } = require("../../middlewares/error/commen.error");
+const User = require("../../models/users.model");
 const Joi = require("joi");
 const bcrypt = require("bcrypt");
-const { LoginValidate, Validate } = require("../validations/user.validation");
+const {
+  LoginValidate,
+  Validate,
+} = require("../../validations/user.validation");
 const Jwt = require("jsonwebtoken");
-const { hashPassword } = require("../utils/bcrypt");
+const { hashPassword } = require("../../utils/bcrypt");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -56,7 +59,6 @@ const UserController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-
   async verifyOtp(req, res) {
     try {
       let enteredotp = parseInt(req.body.otp);
@@ -138,24 +140,32 @@ const UserController = {
         password: password,
       };
 
-      const validating = LoginValidate(userData);
+
+      const validating = Validate(
+        { email:requirments.email,password: requirments.password },
+       userData
+      );
+
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
       let user = await User.findOne({ email: email });
-      if (!user) return res.status(404).send("User Not Found");
+      if (!user) return commonErrors(res, 404, {
+        message: "User Not Found"
+      }); 
 
       let isValidPassword = bcrypt.compare(password, user.password);
       if (!isValidPassword)
-        return res.status(400).send("Password Doesn't Match");
+        return commonErrors(res,400,{message:"Password Doesn't Match"})
       const payload = { _id: user._id, name: user.username, email: user.email };
-  
+
       let token = Jwt.sign(payload, "#$solvusphere$#");
-      return res.status(200).send("Login Successfully", token, user);
+      return commonErrors(res,200,{message:"Login Successfully", token, user})
     } catch (error) {
       console.log(error);
+      return commonErrors(res,500,{message:"Internal Server Error"})
+
     }
   },
 };
-
 module.exports = UserController;

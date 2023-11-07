@@ -1,6 +1,6 @@
 const express = require("express");
 const { DBconnections } = require("./connections/db.connection");
-const user = require("./routers/user.router");
+const user = require("./routers/users.router");
 const morgan = require("morgan");
 require("dotenv").config();
 const app = express();
@@ -13,7 +13,7 @@ app.use(morgan("dev"));
 DBconnections();
 // database connection end
 
-app.use("/sus/user", user);
+app.use("/user", user);
 app.listen(process.env.PORT || 3000, () => console.log("connected"));
 
 module.exports = app;
