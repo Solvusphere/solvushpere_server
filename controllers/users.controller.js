@@ -138,10 +138,12 @@ const UserController = {
         password: password,
       };
 
+
       const validating = Validate(
         { email:requirments.email,password: requirments.password },
        userData
       );
+
       if (!validating.status)
         return res.status(400).send(validating.response[0].message);
 
@@ -160,6 +162,7 @@ const UserController = {
     } catch (error) {
       console.log(error);
       return commonErrors(res,500,{message:"Internal Server Error"})
+
     }
   },
 };
