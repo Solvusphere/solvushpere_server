@@ -7,4 +7,5 @@ router.post("/register/verifyotp", UserController.verifyOtp);
 router.post("/register/verifypass", UserController.registering);
 router.post("/login", UserController.login);
 
+
 module.exports = router;

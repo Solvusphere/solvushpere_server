@@ -13,10 +13,6 @@ function creatingSchema(data) {
   return Joi.object(data);
 }
 
-const LoginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(8).required(),
-});
 
 const Validate = (schma, data) => {
   const { error, value } = creatingSchema(schma).validate(data);
@@ -30,14 +26,8 @@ const validateOtp = (data) => {
   else return { status: true, response: value };
 };
 
-const LoginValidate = (data) => {
-  const { error, value } = LoginSchema.validate(data);
 
-  if (error) return { status: false, response: error.details };
-  else return { status: true, response: value };
-};
 module.exports = {
   validateOtp,
-  LoginValidate,
   Validate,
 };
