@@ -7,6 +7,6 @@ router.post("/verifyemail", comapnyController.verifyEmail);
 router.post("/verifyotp", comapnyController.verifyOtp);
 router.post("/initalregister", comapnyController.registeringIntialData);
 
+router.post('/login', comapnyController.login)
 
-
-module.exports = router;
+module.exports = router

@@ -1,15 +1,11 @@
-const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const redis = require("../../connections/redis.connection");
-const { commonErrors } = require("../../middlewares/error/commen.error");
 const User = require("../../models/users.model");
 const Joi = require("joi");
-const bcrypt = require("bcrypt");
-const {
-  LoginValidate,
-  Validate,
-} = require("../../validations/user.validation");
 const Jwt = require("jsonwebtoken");
-const { hashPassword } = require("../../utils/bcrypt");
+const {Validate} = require("../../validations/user.validation");
+const { hashPassword, campare } = require("../../utils/bcrypt");
+const { sendEmail } = require("../../auth/email/nodemailer.auth");
+const { commonErrors } = require("../../middlewares/error/commen.error");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -153,20 +149,17 @@ const UserController = {
           message: "User Not Found",
         });
 
-      let isValidPassword = bcrypt.compare(password, user.password);
+      let isValidPassword = campare(password, user.password);
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
       const payload = { _id: user._id, name: user.username, email: user.email };
 
       let token = Jwt.sign(payload, "#$solvusphere$#");
-      return commonErrors(res, 200, {
-        message: "Login Successfully",
-        token,
-        user,
-      });
+      return commonErrors(res, 200, { message: "Login Successfully", token, user });
     } catch (error) {
       console.log(error);
       return commonErrors(res, 500, { message: "Internal Server Error" });
+
     }
   },
 };
