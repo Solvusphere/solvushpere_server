@@ -34,10 +34,14 @@ const CompanyController = {
         return commonErrors(res, 400, {
           response: validating.response[0].message,
         });
-      let checkingExisting = await User.findOne({ email: email });
-      if (checkingExisting)
+      let existingUserOrCompany = await Promise.all([
+        User.findOne({ email: email }),
+        Company.findOne({ email: email }),
+      ]);
+
+      if (existingUserOrCompany[0] || existingUserOrCompany[1])
         return commonErrors(res, 400, {
-          response: "This email can't register as a company",
+          response: "This email doesn't have any access to register again",
         });
       sendEmail(email).then((responses) => {
         if (!res.status)
@@ -94,7 +98,15 @@ const CompanyController = {
         });
       }
       let parsedData = JSON.parse(retriveotp);
+      let existingUserOrCompany = await Promise.all([
+        User.findOne({ email: parsedData.email }),
+        Company.findOne({ email: parsedData.email }),
+      ]);
 
+      if (existingUserOrCompany[0] || existingUserOrCompany[1])
+        return commonErrors(res, 400, {
+          response: "This email doesn't have any access to register again",
+        });
       if (!parsedData.verified)
         return commonErrors(res, 400, {
           message:
@@ -146,14 +158,12 @@ const CompanyController = {
         document: "",
       };
       let registeringIntially = new Company(registeringData);
-      let savingDatas = await registeringIntially.save();
-      if (!savingDatas) {
+      await registeringIntially.save().catch((err) => {
         redisSet(parsedData.email, JSON.stringify(registeringData));
         return res.status(500).send({
           error: "Internal Server Error, your registration not completed",
         });
-      }
-      console.log(savingDatas);
+      });
 
       res.status(200).send({
         message: " Registration completed, Welcome to Solvusphere",
