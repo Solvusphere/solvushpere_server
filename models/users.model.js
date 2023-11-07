@@ -8,11 +8,11 @@ const usermodel = new mongoose.Schema({
   email: {
     type: String,
     requried: true,
+    unique: true,
     index: true,
   },
   number: {
     type: Number,
-    required: true,
   },
   password: {
     type: String,
