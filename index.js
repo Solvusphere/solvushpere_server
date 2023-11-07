@@ -1,6 +1,6 @@
 const express = require("express");
 const { DBconnections } = require("./connections/db.connection");
-const user = require("./routers/user.router");
+const user = require("./routers/users.router");
 const morgan = require("morgan");
 require("dotenv").config();
 const app = express();
