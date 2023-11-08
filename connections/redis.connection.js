@@ -26,10 +26,16 @@ module.exports.redisSet = (key, value) => {
   client.set(key, value);
 };
 
-module.exports.setObject = (data) => {
-  client.set(data.otp, JSON.stringify(data), (err) => {
+module.exports.redisReSet = (key, value) => {
+  client.set(key, value);
+  client.expire(key, 2000);
+};
+
+module.exports.setObject = (datas) => {
+  client.set(datas.otp, JSON.stringify(datas), (err) => {
     if (err) return false;
-    client.expire(data.otp, 180);
+
+    client.expire(datas.otp, 3000);
     return true;
   });
 };
@@ -45,6 +51,7 @@ module.exports.redisGet = (key) => {
     });
   });
 };
+
 module.exports.redisDel = (key) => {
   client.del(key);
 };
