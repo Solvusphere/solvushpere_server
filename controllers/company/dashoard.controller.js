@@ -1,6 +1,5 @@
 const Company = require("../../models/compaies.model");
 const Joi = require("joi");
-const bcrypt = require("bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const User = require("../../models/users.model");
 const { sendEmail } = require("../../auth/email/nodemailer.auth");
