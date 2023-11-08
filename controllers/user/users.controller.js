@@ -75,7 +75,6 @@ const UserController = {
         return commonErrors(res, 404, {
           message: varifyingotp.message,
         });
-
         res.send(varifyingotp.message);
     } catch (error) {
       console.log(error);

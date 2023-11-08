@@ -14,6 +14,7 @@ const {
 const { verifyOtp } = require("../../auth/email/otp.auth");
 const Jwt = require("jsonwebtoken");
 const { hashPassword, campare } = require("../../utils/bcrypt");
+
 const { Validate } = require("../../validations/company.validation");
 
 const requirments = {
@@ -23,6 +24,13 @@ const requirments = {
   otp: Joi.number().required(),
   document: Joi.string().required(),
   number: Joi.number().required(),
+  founder: Joi.string().min(3).max(20).required(),
+  logo: Joi.string().required(),
+  web_url: Joi.string().required(),
+  industry: Joi.string().required(),
+  image: Joi.string().required(),
+  name: Joi.string().required(),
+  description: Joi.string().required(),
 };
 
 const CompanyController = {
@@ -173,7 +181,80 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
+  async completeRegistration(req, res) {
+    try {
+      let { id } = req.body;
+      let checkingCache = await redisGet(id);
+      if (checkingCache) {
+        let parsing = JSON.parse(checkingCache);
+        let registeringByCachedData = await Company.findByIdAndUpdate(
+          id,
+          parsing
+        ).exec();
+        if (registeringByCachedData)
+          return res.status(200).send({
+            message: "Registration completed, Welcome to solvusphere",
+          });
+      }
 
+      const { founder, logo, image, web_url, industry, services } = req.body;
+      const companyData = {
+        founder,
+        logo,
+        image,
+        web_url,
+        industry,
+        services,
+      };
+
+      const value = await Company.findById(id).exec();
+      if (!value) {
+        redisSet(id, companyData);
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
+      let validatingDatas = Validate(
+        {
+          founder: requirments.founder,
+          logo: requirments.logo,
+          image: requirments.image,
+          web_url: requirments.web_url,
+          industry: requirments.industry,
+          services: {
+            image: requirments.image,
+            name: requirments.name,
+            description: requirments.description,
+          },
+        },
+        companyData
+      );
+      console.log(validatingDatas);
+      if (validatingDatas.status == false)
+        return commonErrors(res, 400, {
+          message: validatingDatas.response[0].message,
+        });
+      const savingCompleteData = await Company.findByIdAndUpdate(
+        id,
+        companyData
+      ).exec();
+
+      if (!savingCompleteData) {
+        redisSet(id, companyData);
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
+
+      // Data successfully
+      res
+        .status(200)
+        .send({ message: "Registration completed. Welcome to Solvusphere!" });
+    } catch (error) {
+      console.log(error);
+      return commonErrors(res, 500, { message: "sothing went worng" });
+    }
+  },
   async login(req, res) {
     try {
       const { email, password } = req.body;
