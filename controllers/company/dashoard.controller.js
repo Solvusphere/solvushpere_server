@@ -4,7 +4,7 @@ const Jwt = require('jsonwebtoken')
 const Redis = require("../../connections/redis.connection")
 const { commonErrors } = require('../../middlewares/error/commen.error')
 const { hashPassword, campare } = require('../../utils/bcrypt')
-const { validateOtp, Validate } = require('../../validations/company.validation')
+const { Validate } = require('../../validations/company.validation')
 
 const requirments = {
   password: Joi.string().min(8).required(),
