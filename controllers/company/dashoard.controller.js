@@ -11,6 +11,7 @@ const {
   redisReSet,
   redisGet,
 } = require("../../connections/redis.connection");
+
 const { verifyOtp } = require("../../auth/email/otp.auth");
 const Jwt = require('jsonwebtoken')
 const Redis = require("../../connections/redis.connection")
@@ -55,6 +56,7 @@ const CompanyController = {
           otp: otp,
           verified: false,
         };
+
         let storingOtp = setObject(validationData);
         if (storingOtp == false)
           return commonErrors(res, 404, {
@@ -186,14 +188,14 @@ const CompanyController = {
                 { email: requirments.email, password: requirments.password },
                 CompanyData
             )
-            if (!validating)
+            if (!validating.status)
                 return commonErrors(res, 400, validating.response[0].message)
             
             const company = await Company.findOne({ email: email })
             if (!company)
                 return commonErrors(res, 404, { message: "Please Register Your Company" })
             
-            const isValidPassword = await campare(password, company.password)
+            const isValidPassword = await campare(password,email, company.password)
             
             if (!isValidPassword)
                 return commonErrors(res, 400, { message: "Password Doesn't Match" })
