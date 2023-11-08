@@ -11,11 +11,13 @@ const {
   redisReSet,
   redisGet,
 } = require("../../connections/redis.connection");
-const { verifyOtp } = require("../../auth/email/otp.auth");
-const Jwt = require("jsonwebtoken");
-const { hashPassword, campare } = require("../../utils/bcrypt");
 
-const { Validate } = require("../../validations/company.validation");
+const { verifyOtp } = require("../../auth/email/otp.auth");
+const Jwt = require('jsonwebtoken')
+const Redis = require("../../connections/redis.connection")
+const { hashPassword, campare } = require('../../utils/bcrypt')
+const { Validate } = require('../../validations/company.validation')
+
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -62,6 +64,7 @@ const CompanyController = {
           otp: otp,
           verified: false,
         };
+
         let storingOtp = setObject(validationData);
         if (storingOtp == false)
           return commonErrors(res, 404, {
@@ -196,7 +199,6 @@ const CompanyController = {
             message: "Registration completed, Welcome to solvusphere",
           });
       }
-
       const { founder, logo, image, web_url, industry, services } = req.body;
       const companyData = {
         founder,
@@ -253,6 +255,7 @@ const CompanyController = {
     } catch (error) {
       console.log(error);
       return commonErrors(res, 500, { message: "sothing went worng" });
+
     }
   },
   async login(req, res) {

@@ -140,7 +140,7 @@ const UserController = {
       );
 
       if (!validating.status)
-        return res.status(400).send(validating.response[0].message);
+        return commonErrors(res,400,{message:validating.response[0].message})
 
       let user = await User.findOne({ email: email });
       if (!user)
@@ -148,7 +148,7 @@ const UserController = {
           message: "User Not Found",
         });
 
-      let isValidPassword = campare(password, user.password);
+      let isValidPassword = campare(password, email, user.password);
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
       const payload = { _id: user._id, name: user.username, email: user.email };
