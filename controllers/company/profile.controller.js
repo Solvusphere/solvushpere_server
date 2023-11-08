@@ -4,7 +4,7 @@ const { commonErrors } = require('../../middlewares/error/commen.error')
 const Jwt = require('jsonwebtoken')
 
 const ProfileController = {
-    async loadProfile(req,res) {
+    async fetchingProfile(req,res) {
         try {
             const {id} = req.body
             const data = await Company.findOne({ _id: id })
@@ -13,9 +13,20 @@ const ProfileController = {
             return res.status(200).send(data)
         } catch (error) {
             console.log(error);
-            commonErrors(res, 500, { message:"Internal Server Error"})
+            commonErrors(error, 500, { message:"Internal Server Error"})
         }
-   }
+    },
+    
+    async editProfile(req, res) {
+      try {
+          const { } = req.body
+          
+        
+      } catch (error) {
+        console.log(error);
+        commonErrors(error,500,{message:"Internal Server Error"})
+      }  
+    }
 
 }
 
