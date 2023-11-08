@@ -17,7 +17,7 @@ function sendEmail(to) {
       subject: `One Time OTP for verification `,
       html: ` <div class="container" style="max-width: 800px; margin: 0 auto; background-color: #fff; border: 1px solid #ccc; border-radius: 5px; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: left;">
     <div class="header" style="text-align: center; font-size: 24px; font-weight: bold;">One-Time Password (OTP)</div>
-    <div class="logo" style="text-align: center; margin-top: 20px;"><img src="" alt="Your Logo" style="max-width: 100%;"></div>
+    <div class="logo" style="text-align: center; margin-top: 20px;"><img src="https://www.google.com/imgres?imgurl=https%3A%2F%2Fstatic.javatpoint.com%2Fcomputer%2Fimages%2Fe-mail.png&tbnid=ArRdipA24dAv2M&vet=12ahUKEwiz_pnnw7GCAxWT2jgGHVzhCyoQMygcegUIARCxAQ..i&imgrefurl=https%3A%2F%2Fwww.javatpoint.com%2Fe-mail&docid=wPpKR7L030rmAM&w=200&h=200&q=mail%20images&ved=2ahUKEwiz_pnnw7GCAxWT2jgGHVzhCyoQMygcegUIARCxAQ" alt="Your Logo" style="max-width: 100%;"></div>
     <div class="description" style="font-size: 18px; margin-top: 20px;">Welcome to our OTP validation service. Please enter the OTP below to continue.</div>
     <div class="otp-container" style="text-align: center; margin: 20px auto;">
       <p>Your OTP is:</p>
@@ -29,7 +29,6 @@ function sendEmail(to) {
 
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.log(error);
         reject({ status: false });
       } else {
         console.log(`Email sent successfully!`);
