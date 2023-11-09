@@ -28,7 +28,7 @@ describe("User Registration API", () => {
       password: "password123",
     };
     await supertest(app)
-      .post("/user/register")
+      .post("/sus/user/register")
       .send(userData)
       .expect(200)
       .then(async (response) => {
