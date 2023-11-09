@@ -278,7 +278,7 @@ const CompanyController = {
           message: "Please Register Your Company",
         });
 
-      const isValidPassword = await campare(password, company.password);
+      const isValidPassword = await campare(password,email, company.password);
 
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });

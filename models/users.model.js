@@ -17,6 +17,10 @@ const usermodel = new mongoose.Schema({
   password: {
     type: String,
   },
+  verified: {
+    type: Boolean,
+    required:true
+  }
 });
 
 let User = mongoose.model("user", usermodel);
