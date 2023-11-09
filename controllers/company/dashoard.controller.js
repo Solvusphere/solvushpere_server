@@ -16,10 +16,9 @@ const { verifyOtp } = require("../../auth/email/otp.auth");
 const Jwt = require("jsonwebtoken");
 const Redis = require("../../connections/redis.connection");
 const { hashPassword, campare } = require("../../utils/bcrypt");
-const {
-  Validate,
-} = require("../../validations/company.validation");
+const { Validate } = require("../../validations/company.validation");
 const Goals = require("../../models/goals.model");
+const { sendEmailAsLink } = require("../../auth/email/link.auth");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -56,20 +55,18 @@ const CompanyController = {
         return commonErrors(res, 400, {
           response: "This email doesn't have any access to register again",
         });
-      sendEmail(email).then((responses) => {
+      sendEmailAsLink(email).then((responses) => {
         if (!res.status)
           return commonErrors(res, 404, {
             response: "otp has been not sended, Please try again ",
           });
-        let otp = responses.otp;
+        let authenticateEmail = responses;
         let validationData = {
           email: email,
-          otp: otp,
-          verified: false,
         };
 
-        let storingOtp = setObject(validationData);
-        if (storingOtp == false)
+        let storingcompanydata = setObject(validationData);
+        if (storingcompanydata == false)
           return commonErrors(res, 404, {
             response: "Somthing went worng, please refresh and try again",
           });
@@ -80,38 +77,17 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async verifyOtp(req, res) {
-    try {
-      let { otp } = req.body;
-      let validateOtp = Validate({ otp: requirments.otp }, { otp: otp });
-      if (!validateOtp.status)
-        return commonErrors(res, 404, {
-          message: validateOtp.response[0].message,
-        });
-      let varifyingotp = await verifyOtp(otp);
-      if (varifyingotp.status == false)
-        return commonErrors(res, 404, {
-          message: varifyingotp.message,
-        });
-
-      res.send({ message: varifyingotp.message, otp });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send({ error: "Internal Server Error" });
-    }
-  },
   async registeringIntialData(req, res) {
     try {
-      const { name, number, password, document, otp } = req.body;
+      const { name, number, password, document, email } = req.body;
 
-      let retriveotp = await redisGet(JSON.stringify(otp));
-
-      if (!retriveotp) {
+      let retrivedata = await redisGet(`${email}_verify`);
+      if (!retrivedata) {
         return commonErrors(res, 400, {
           message: "Please verify your email agin",
         });
       }
-      let parsedData = JSON.parse(retriveotp);
+      let parsedData = JSON.parse(retrivedata);
       let existingUserOrCompany = await Promise.all([
         User.findOne({ email: parsedData.email }),
         Company.findOne({ email: parsedData.email }),
@@ -121,11 +97,7 @@ const CompanyController = {
         return commonErrors(res, 400, {
           response: "This email doesn't have any access to register again",
         });
-      if (!parsedData.verified)
-        return commonErrors(res, 400, {
-          message:
-            "This details not verified, Please verify your email for further process otp",
-        });
+
       let retrivingCachedData = await redisGet(parsedData.email);
       if (retrivingCachedData) {
         let parsing = JSON.parse(retrivingCachedData);
@@ -178,7 +150,7 @@ const CompanyController = {
           error: "Internal Server Error, your registration not completed",
         });
       });
-
+      redisDel(`${parsedData.email}_verify`);
       res.status(200).send({
         message: " Registration completed, Welcome to Solvusphere",
       });
@@ -219,7 +191,7 @@ const CompanyController = {
       const value = await Company.findById(id).exec();
       if (!value) {
         return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
+          message: `You don't have any access to change this datas`,
         });
       }
       let validatingDatas = Validate(
@@ -253,20 +225,34 @@ const CompanyController = {
         mission: goals.mission,
         company_id: id,
       };
-      let createdSolution = new Goals(companyGoal);
-      if (!createdSolution) {
-        redisSet(id, companyData);
-        return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
-        });
-      }
-      let savingSolution = await createdSolution.save();
-      if (!savingSolution) {
-        redisSet(id, companyData);
+      let cheakingIfAlreadyExist = await Goals.findOne({ company_id: id });
+      if (cheakingIfAlreadyExist) {
+        let updateSolution = await Goals.updateOne(
+          { company_id: id },
+          {
+            $set: {
+              solution: goals.solution,
+              vision: goals.vision,
+              mission: goals.mission,
+            },
+          }
+        );
+      } else {
+        let createdSolution = new Goals(companyGoal);
+        if (!createdSolution) {
+          redisSet(id, companyData);
+          return commonErrors(res, 400, {
+            message: `Something went wrong, but your data will be stored temporarily.1`,
+          });
+        }
+        let savingSolution = await createdSolution.save();
+        if (!savingSolution) {
+          redisSet(id, companyData);
 
-        return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
-        });
+          return commonErrors(res, 400, {
+            message: `Something went wrong, but your data will be stored temporarily.2`,
+          });
+        }
       }
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
@@ -275,7 +261,7 @@ const CompanyController = {
       if (!savingCompleteData) {
         redisSet(id, companyData);
         return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
+          message: `Something went wrong, but your data will be stored temporarily.3`,
         });
       }
       // Data successfully
@@ -307,7 +293,7 @@ const CompanyController = {
           message: "Please Register Your Company",
         });
 
-      const isValidPassword = await campare(password, company.password);
+      const isValidPassword = await campare(password, email, company.password);
 
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
