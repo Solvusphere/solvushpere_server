@@ -13,11 +13,10 @@ const {
 } = require("../../connections/redis.connection");
 
 const { verifyOtp } = require("../../auth/email/otp.auth");
-const Jwt = require('jsonwebtoken')
-const Redis = require("../../connections/redis.connection")
-const { hashPassword, campare } = require('../../utils/bcrypt')
-const { Validate } = require('../../validations/company.validation')
-
+const Jwt = require("jsonwebtoken");
+const Redis = require("../../connections/redis.connection");
+const { hashPassword, campare } = require("../../utils/bcrypt");
+const { Validate } = require("../../validations/company.validation");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -255,7 +254,6 @@ const CompanyController = {
     } catch (error) {
       console.log(error);
       return commonErrors(res, 500, { message: "sothing went worng" });
-
     }
   },
   async login(req, res) {
@@ -299,6 +297,7 @@ const CompanyController = {
       return commonErrors(error, 500, { message: "Internal Server Error" });
     }
   },
+  
 };
 
 module.exports = CompanyController;

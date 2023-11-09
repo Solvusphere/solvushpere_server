@@ -2,7 +2,7 @@ const redis = require("../../connections/redis.connection");
 const User = require("../../models/users.model");
 const Joi = require("joi");
 const Jwt = require("jsonwebtoken");
-const {Validate} = require("../../validations/user.validation");
+const { Validate } = require("../../validations/user.validation");
 const { hashPassword, campare } = require("../../utils/bcrypt");
 const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const { commonErrors } = require("../../middlewares/error/commen.error");
@@ -44,12 +44,12 @@ const UserController = {
           email: userData.email,
           username: userData.username,
           otp: OTP,
-          verified:false
+          verified: false,
         };
         let savingToredis = redis.setObject(userdata);
         if (savingToredis == false)
           return res.status(404).send({ error: "Internal server error" });
-        res.status(200).send("Successfully registered");
+        res.status(200).send("Otp has been sented into your email");
       });
     } catch (error) {
       console.log(error);
@@ -75,7 +75,7 @@ const UserController = {
         return commonErrors(res, 404, {
           message: varifyingotp.message,
         });
-        res.send(varifyingotp.message);
+      res.send(varifyingotp.message);
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });
@@ -140,7 +140,9 @@ const UserController = {
       );
 
       if (!validating.status)
-        return commonErrors(res,400,{message:validating.response[0].message})
+        return commonErrors(res, 400, {
+          message: validating.response[0].message,
+        });
 
       let user = await User.findOne({ email: email });
       if (!user)
@@ -154,11 +156,14 @@ const UserController = {
       const payload = { _id: user._id, name: user.username, email: user.email };
 
       let token = Jwt.sign(payload, "#$solvusphere$#");
-      return commonErrors(res, 200, { message: "Login Successfully", token, user });
+      return commonErrors(res, 200, {
+        message: "Login Successfully",
+        token,
+        user,
+      });
     } catch (error) {
       console.log(error);
       return commonErrors(res, 500, { message: "Internal Server Error" });
-
     }
   },
 };
