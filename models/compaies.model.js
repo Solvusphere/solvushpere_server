@@ -17,6 +17,10 @@ const comapnyModel = new mongoose.Schema({
     type: String,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    required:true
+  },
   owner: {
     type: String,
     // required: true,

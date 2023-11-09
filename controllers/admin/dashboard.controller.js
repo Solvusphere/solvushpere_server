@@ -1,5 +1,5 @@
 const Admin = require('../../models/admin.model')
-const Jwt = require('jsonwebtoken')
+const Jwt = require('jsonwebtoken') 
 const Joi = require('joi')
 const { hashPassword,campare } = require('../../utils/bcrypt')
 const { Validate } = require('../../validations/admin.validation')
@@ -7,6 +7,8 @@ const { commonErrors } = require('../../middlewares/error/commen.error')
 const {sendEmail} = require('../../auth/email/nodemailer.auth')
 const { setObject,redisGet } = require('../../connections/redis.connection') 
 const {verifyOtp} = require('../../auth/email/otp.auth')
+const Company = require('../../models/compaies.model')
+const User = require('../../models/users.model')
 const requirments = {
 number: Joi.number().min(10).required(),
   password: Joi.string().min(8).required(),
@@ -69,12 +71,12 @@ const adminController = {
        
             const { email, password, name, number,otp } = req.body
             let retriveotp = await redisGet(JSON.stringify(otp));
-
             if (!retriveotp) {
                 return commonErrors(res, 400, {
                 message: "Please verify your email agin",
                 });
             }
+
             let parsedData = JSON.parse(retriveotp);
             if (!parsedData.verified)
                 return commonErrors(res, 400, {
@@ -88,26 +90,20 @@ const adminController = {
                 number : number,
                 password: password,
             };
-          
-
             let validating = Validate({
                 name:requirments.name,
                 email: requirments.email,
                 number: requirments.number,
                 password: requirments.password,
             }, adminData);
-        
-            
             if (!validating.status)
-                return commonErrors(res,400,{message:validating.response[0].message})
+                return commonErrors(res, 400, { message: validating.response[0].message })
             
             let encryptpassword = await hashPassword(password, parsedData.email);
             if (!encryptpassword)
                 return commonErrors(res, 400, {
                 message: "somthing went worng try again",
                 });
-         
-            
             let registeringData =  {
                 name: name,
                 email: parsedData.email,
@@ -115,12 +111,9 @@ const adminController = {
                 password: encryptpassword,
             };
            
-
             let registeringIntially = new Admin(registeringData);
-           
             await registeringIntially.save()
             res.status(200).send({ message: " Registration completed, Welcome to Solvusphere" });
-            
         } catch (error) {
             console.log(error);
             commonErrors(error,500,{message:"Interanl Server Error"})
@@ -158,8 +151,18 @@ const adminController = {
             console.log(error);
             return commonErrors(error,500,{message:"Internal Server Error"})
         }
-    }
+    },
 
+    async loadProfile(req, res) {
+        try {
+            
+        } catch (error) {
+            console.log(error);
+            commonErrors(error,500,{message:"Internal Server Error"})
+        }
+    },
+
+  
 }
 
 module.exports = adminController
