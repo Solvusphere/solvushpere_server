@@ -1,7 +1,7 @@
 const app = require("../index"); // Your Express app or HTTP server
 const mongoose = require("mongoose");
 const supertest = require("supertest");
-const User = require("../models/user.model");
+const User = require("../models/users.model");
 
 describe("User Registration API", () => {
   beforeAll(async () => {
@@ -22,19 +22,20 @@ describe("User Registration API", () => {
   
   it("should register a user", async () => {
     const userData = {
-      name: "John Doe",
+      username: "John Doe",
       email: "john@example.com",
-      number: "1234567890",
-      password: "password123",
     };
     await supertest(app)
-      .post("/sus/user/register")
+      .post("/register/verifyemail")
       .send(userData)
       .expect(200)
       .then(async (response) => {
         // Check the response
         console.log(response);
-        expect(response.text).toBe("Successfully registered");
+        expect(response.text).toBe("Otp has been sented into your email");
       });
   });
+
+  
 });
+

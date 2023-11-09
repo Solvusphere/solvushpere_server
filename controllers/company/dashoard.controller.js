@@ -13,11 +13,13 @@ const {
 } = require("../../connections/redis.connection");
 
 const { verifyOtp } = require("../../auth/email/otp.auth");
-const Jwt = require('jsonwebtoken')
-const Redis = require("../../connections/redis.connection")
-const { hashPassword, campare } = require('../../utils/bcrypt')
-const { Validate } = require('../../validations/company.validation')
-
+const Jwt = require("jsonwebtoken");
+const Redis = require("../../connections/redis.connection");
+const { hashPassword, campare } = require("../../utils/bcrypt");
+const {
+  Validate,
+} = require("../../validations/company.validation");
+const Goals = require("../../models/goals.model");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -33,6 +35,7 @@ const requirments = {
   image: Joi.string().required(),
   name: Joi.string().required(),
   description: Joi.string().required(),
+  goals: Joi.string().min(4).required(),
 };
 
 const CompanyController = {
@@ -194,12 +197,16 @@ const CompanyController = {
           id,
           parsing
         ).exec();
-        if (registeringByCachedData)
+        if (registeringByCachedData) {
+          redisDel(id);
           return res.status(200).send({
             message: "Registration completed, Welcome to solvusphere",
           });
+        }
       }
-      const { founder, logo, image, web_url, industry, services } = req.body;
+
+      const { founder, logo, image, web_url, industry, services, goals } =
+        req.body;
       const companyData = {
         founder,
         logo,
@@ -207,11 +214,10 @@ const CompanyController = {
         web_url,
         industry,
         services,
+        goals,
       };
-
       const value = await Company.findById(id).exec();
       if (!value) {
-        redisSet(id, companyData);
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
@@ -228,26 +234,50 @@ const CompanyController = {
             name: requirments.name,
             description: requirments.description,
           },
+          goals: {
+            solution: requirments.goals,
+            vision: requirments.goals,
+            mission: requirments.goals,
+          },
         },
         companyData
       );
-      console.log(validatingDatas);
-      if (validatingDatas.status == false)
+      if (validatingDatas.status == false) {
         return commonErrors(res, 400, {
           message: validatingDatas.response[0].message,
         });
+      }
+      let companyGoal = {
+        solution: goals.solution,
+        vision: goals.vision,
+        mission: goals.mission,
+        company_id: id,
+      };
+      let createdSolution = new Goals(companyGoal);
+      if (!createdSolution) {
+        redisSet(id, companyData);
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
+      let savingSolution = await createdSolution.save();
+      if (!savingSolution) {
+        redisSet(id, companyData);
+
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
         companyData
       ).exec();
-
       if (!savingCompleteData) {
         redisSet(id, companyData);
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
       }
-
       // Data successfully
       res
         .status(200)
@@ -255,7 +285,6 @@ const CompanyController = {
     } catch (error) {
       console.log(error);
       return commonErrors(res, 500, { message: "sothing went worng" });
-
     }
   },
   async login(req, res) {

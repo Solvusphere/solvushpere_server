@@ -16,7 +16,7 @@ DBconnections();
 // database connection end
 
 // <------------------routes-------------------->
-app.use("/user", user);
+app.use("/", user);
 app.use("/company", company);
 app.use("/admin",admin)
 // <-------------------------------------->
