@@ -17,7 +17,6 @@ const Jwt = require("jsonwebtoken");
 const Redis = require("../../connections/redis.connection");
 const { hashPassword, campare } = require("../../utils/bcrypt");
 const {
-  validateOtp,
   Validate,
 } = require("../../validations/company.validation");
 const Goals = require("../../models/goals.model");

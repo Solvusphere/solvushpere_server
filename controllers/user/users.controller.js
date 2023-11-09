@@ -1,11 +1,15 @@
-const redis = require("../../connections/redis.connection");
+const {
+  setObject,
+  redisGet,
+  redisDel,
+} = require("../../connections/redis.connection");
 const User = require("../../models/users.model");
 const Joi = require("joi");
 const Jwt = require("jsonwebtoken");
 const { Validate } = require("../../validations/user.validation");
 const { hashPassword, campare } = require("../../utils/bcrypt");
-const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const { commonErrors } = require("../../middlewares/error/commen.error");
+const { sendEmailAsLink } = require("../../auth/email/link.auth");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -35,55 +39,29 @@ const UserController = {
         return res.status(400).send(validating.response[0].message);
 
       let authenticateEmail;
-      sendEmail(userData.email).then(async (response) => {
+      sendEmailAsLink(userData.email).then(async (response) => {
         authenticateEmail = response;
+        console.log(authenticateEmail);
         if (authenticateEmail.status == false)
           return commonErrors(res, 400, { error: "Email is not validated" });
-        let OTP = authenticateEmail.otp;
         let userdata = {
           email: userData.email,
           username: userData.username,
-          otp: OTP,
-          verified: false,
         };
-        let savingToredis = redis.setObject(userdata);
-        if (savingToredis == false)
-          return res.status(404).send({ error: "Internal server error" });
-        res.status(200).send("Otp has been sented into your email");
+        setObject(userdata);
+        res.status(200).send({
+          message: "Verification link has been sented into your email",
+        });
       });
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async verifyOtp(req, res) {
-    try {
-      let enteredotp = parseInt(req.body.otp);
-      let validatingOtp = Validate(
-        { otp: requirments.otp },
-        { otp: enteredotp }
-      );
-      if (!validatingOtp.status)
-        return commonErrors(res, 400, { error: "Please enter otp" });
-      let takeUserdata = await redis.redisGet(`${enteredotp}`);
-      if (!takeUserdata)
-        return commonErrors(res, 400, {
-          error: "Invalide Otp,Please resend the otp again ",
-        });
-      let varifyingotp = await verifyOtp(otp);
-      if (varifyingotp.status == false)
-        return commonErrors(res, 404, {
-          message: varifyingotp.message,
-        });
-      res.send(varifyingotp.message);
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send({ error: "Internal Server Error" });
-    }
-  },
+
   async registering(req, res) {
     try {
-      let { password, otp } = req.body;
+      let { password, email } = req.body;
       let validating = Validate(
         { password: requirments.password },
         { password: password }
@@ -92,12 +70,12 @@ const UserController = {
         return commonErrors(res, 404, {
           error: validating.response[0].message,
         });
-      let hashingpassword = await hashPassword(password);
+      let hashingpassword = await hashPassword(password, email);
       if (!hashingpassword)
         return commonErrors(res, 500, {
           error: "internal server error",
         });
-      let userdata = await redis.redisGet(otp);
+      let userdata = await redisGet(email);
       if (!userdata)
         return commonErrors(res, 404, {
           error: "Otp has been expaired, please sent verify again  ",
@@ -119,8 +97,10 @@ const UserController = {
         .catch((err) => {
           throw new Error(err.error.message);
         });
-      redis.redisDel(otp);
-      res.send(true);
+      redisDel(email);
+      res.status(200).send({
+        message: "Welcome to solvusphere, Your registration completed",
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "Internal Server Error" });

@@ -2,10 +2,13 @@ function DBconnections() {
   const mongoose = require("mongoose");
 
   mongoose
-    .connect("mongodb://0.0.0.0:27017/solvusphere", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    .connect(
+      "mongodb+srv://Solvusphere:4GCr2kfGY6kJa3bT@cluster0.eewbchx.mongodb.net/solvusphere",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
+    )
     .then((res) => {
       console.log("connected to database");
     })
@@ -13,5 +16,3 @@ function DBconnections() {
 }
 
 module.exports = { DBconnections };
-
- 
