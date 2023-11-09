@@ -77,32 +77,11 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async verifyOtp(req, res) {
-    try {
-      let { otp } = req.body;
-      let validateOtp = Validate({ otp: requirments.otp }, { otp: otp });
-      if (!validateOtp.status)
-        return commonErrors(res, 404, {
-          message: validateOtp.response[0].message,
-        });
-      let varifyingotp = await verifyOtp(otp);
-      if (varifyingotp.status == false)
-        return commonErrors(res, 404, {
-          message: varifyingotp.message,
-        });
-
-      res.send({ message: varifyingotp.message, otp });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send({ error: "Internal Server Error" });
-    }
-  },
   async registeringIntialData(req, res) {
     try {
       const { name, number, password, document, email } = req.body;
 
-      let retrivedata = await redisGet(JSON.stringify(email));
-
+      let retrivedata = await redisGet(`${email}_verify`);
       if (!retrivedata) {
         return commonErrors(res, 400, {
           message: "Please verify your email agin",
@@ -171,7 +150,7 @@ const CompanyController = {
           error: "Internal Server Error, your registration not completed",
         });
       });
-
+      redisDel(`${parsedData.email}_verify`);
       res.status(200).send({
         message: " Registration completed, Welcome to Solvusphere",
       });
@@ -212,7 +191,7 @@ const CompanyController = {
       const value = await Company.findById(id).exec();
       if (!value) {
         return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
+          message: `You don't have any access to change this datas`,
         });
       }
       let validatingDatas = Validate(
@@ -246,20 +225,34 @@ const CompanyController = {
         mission: goals.mission,
         company_id: id,
       };
-      let createdSolution = new Goals(companyGoal);
-      if (!createdSolution) {
-        redisSet(id, companyData);
-        return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
-        });
-      }
-      let savingSolution = await createdSolution.save();
-      if (!savingSolution) {
-        redisSet(id, companyData);
+      let cheakingIfAlreadyExist = await Goals.findOne({ company_id: id });
+      if (cheakingIfAlreadyExist) {
+        let updateSolution = await Goals.updateOne(
+          { company_id: id },
+          {
+            $set: {
+              solution: goals.solution,
+              vision: goals.vision,
+              mission: goals.mission,
+            },
+          }
+        );
+      } else {
+        let createdSolution = new Goals(companyGoal);
+        if (!createdSolution) {
+          redisSet(id, companyData);
+          return commonErrors(res, 400, {
+            message: `Something went wrong, but your data will be stored temporarily.1`,
+          });
+        }
+        let savingSolution = await createdSolution.save();
+        if (!savingSolution) {
+          redisSet(id, companyData);
 
-        return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
-        });
+          return commonErrors(res, 400, {
+            message: `Something went wrong, but your data will be stored temporarily.2`,
+          });
+        }
       }
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
@@ -268,7 +261,7 @@ const CompanyController = {
       if (!savingCompleteData) {
         redisSet(id, companyData);
         return commonErrors(res, 400, {
-          message: `Something went wrong, but your data will be stored temporarily.`,
+          message: `Something went wrong, but your data will be stored temporarily.3`,
         });
       }
       // Data successfully
