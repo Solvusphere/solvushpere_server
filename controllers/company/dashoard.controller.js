@@ -1,6 +1,5 @@
 const Company = require("../../models/compaies.model");
 const Joi = require("joi");
-const bcrypt = require("bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const User = require("../../models/users.model");
 const { sendEmail } = require("../../auth/email/nodemailer.auth");
@@ -12,6 +11,7 @@ const {
   redisReSet,
   redisGet,
 } = require("../../connections/redis.connection");
+
 const { verifyOtp } = require("../../auth/email/otp.auth");
 const Jwt = require("jsonwebtoken");
 const Redis = require("../../connections/redis.connection");
@@ -68,6 +68,7 @@ const CompanyController = {
           otp: otp,
           verified: false,
         };
+
         let storingOtp = setObject(validationData);
         if (storingOtp == false)
           return commonErrors(res, 404, {
@@ -304,6 +305,7 @@ const CompanyController = {
       return commonErrors(error, 500, { message: "Internal Server Error" });
     }
   },
+  
 };
 
 module.exports = CompanyController;
