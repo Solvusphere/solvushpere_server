@@ -20,6 +20,7 @@ const {
   validateOtp,
   Validate,
 } = require("../../validations/company.validation");
+const Goals = require("../../models/goals.model");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -35,6 +36,7 @@ const requirments = {
   image: Joi.string().required(),
   name: Joi.string().required(),
   description: Joi.string().required(),
+  solution: Joi.string().min(4).required(),
 };
 
 const CompanyController = {
@@ -195,13 +197,16 @@ const CompanyController = {
           id,
           parsing
         ).exec();
-        if (registeringByCachedData)
+        if (registeringByCachedData) {
+          redisDel(id);
           return res.status(200).send({
             message: "Registration completed, Welcome to solvusphere",
           });
+        }
       }
 
-      const { founder, logo, image, web_url, industry, services } = req.body;
+      const { founder, logo, solution, image, web_url, industry, services } =
+        req.body;
       const companyData = {
         founder,
         logo,
@@ -213,7 +218,6 @@ const CompanyController = {
 
       const value = await Company.findById(id).exec();
       if (!value) {
-        redisSet(id, companyData);
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
@@ -225,6 +229,7 @@ const CompanyController = {
           image: requirments.image,
           web_url: requirments.web_url,
           industry: requirments.industry,
+          solution: requirments.solution,
           services: {
             image: requirments.image,
             name: requirments.name,
@@ -233,7 +238,6 @@ const CompanyController = {
         },
         companyData
       );
-      console.log(validatingDatas);
       if (validatingDatas.status == false)
         return commonErrors(res, 400, {
           message: validatingDatas.response[0].message,
@@ -249,7 +253,7 @@ const CompanyController = {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
       }
-
+      let SavingSolution=Goals.fi
       // Data successfully
       res
         .status(200)
