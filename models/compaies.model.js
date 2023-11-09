@@ -105,6 +105,21 @@ const comapnyModel = new mongoose.Schema({
       },
     },
   ],
+  paid_amount: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  remining_slots: {
+    big: {
+      type: Number,
+      default:0
+    },
+    small: {
+      type: Number,
+      default:0
+    },
+  },
 });
 
 const Company = mongoose.model("companies", comapnyModel);

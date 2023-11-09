@@ -70,7 +70,7 @@ const UserController = {
         return commonErrors(res, 404, {
           error: validating.response[0].message,
         });
-      let hashingpassword = await hashPassword(password, email);
+      let hashingpassword = await hashPassword(password);
       if (!hashingpassword)
         return commonErrors(res, 500, {
           error: "internal server error",
@@ -130,7 +130,7 @@ const UserController = {
           message: "User Not Found",
         });
 
-      let isValidPassword = campare(password, email, user.password);
+      let isValidPassword = campare(password, user.password);
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
       const payload = { _id: user._id, name: user.username, email: user.email };

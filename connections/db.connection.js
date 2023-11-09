@@ -1,14 +1,11 @@
 function DBconnections() {
   const mongoose = require("mongoose");
-
+  require('dotenv').config()
   mongoose
-    .connect(
-      "mongodb+srv://Solvusphere:4GCr2kfGY6kJa3bT@cluster0.eewbchx.mongodb.net/solvusphere",
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    )
+    .connect(process.env.MONGO_CONNECTION, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
     .then((res) => {
       console.log("connected to database");
     })
