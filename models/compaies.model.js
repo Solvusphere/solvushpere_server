@@ -21,7 +21,9 @@ const comapnyModel = new mongoose.Schema({
     type: Boolean,
     required:true
   },
-  owner: {
+  
+  founder: {
+
     type: String,
     // required: true,
   },
@@ -29,7 +31,7 @@ const comapnyModel = new mongoose.Schema({
     type: String,
     // required: true,
   },
-  main_image: {
+  image: {
     type: String,
     // required: true,
   },

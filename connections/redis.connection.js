@@ -28,14 +28,14 @@ module.exports.redisSet = (key, value) => {
 
 module.exports.redisReSet = (key, value) => {
   client.set(key, value);
-  client.expire(key, 2000);
+  client.expire(key, 200);
 };
 
 module.exports.setObject = (datas) => {
   client.set(datas.otp, JSON.stringify(datas), (err) => {
     if (err) return false;
 
-    client.expire(datas.otp, 3000);
+    client.expire(datas.otp, 300);
     return true;
   });
 };
