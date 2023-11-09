@@ -32,10 +32,11 @@ module.exports.redisReSet = (key, value) => {
 };
 
 module.exports.setObject = (datas) => {
-  client.set(datas.otp, JSON.stringify(datas), (err) => {
+  console.log(datas);
+  client.set(datas.email, JSON.stringify(datas), (err) => {
     if (err) return false;
-
-    client.expire(datas.otp, 300);
+  console.log(datas);
+    client.expire(datas.email, 300);
     return true;
   });
 };

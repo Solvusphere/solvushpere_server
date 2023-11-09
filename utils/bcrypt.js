@@ -9,7 +9,6 @@ module.exports.hashPassword = async (password, email) => {
     throw new Error("Error hashing the password");
   }
 };
-
 module.exports.campare = async (currentPassword, email, hashedpassword) => {
   try {
     let decode = await bcrypt.compare(currentPassword + email, hashedpassword);

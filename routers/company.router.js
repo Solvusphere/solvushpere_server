@@ -9,7 +9,6 @@ router.post("/initalregister", comapnyController.registeringIntialData);
 router.post("/detailedRegistration", comapnyController.completeRegistration);
 router.post('/login', comapnyController.login)
 
-
 router.get('/profile',dashboardController.fetchingProfile)
 router.post('/editProfile',dashboardController.editProfile)
 
