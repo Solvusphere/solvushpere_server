@@ -16,10 +16,9 @@ const { verifyOtp } = require("../../auth/email/otp.auth");
 const Jwt = require("jsonwebtoken");
 const Redis = require("../../connections/redis.connection");
 const { hashPassword, campare } = require("../../utils/bcrypt");
-const {
-  Validate,
-} = require("../../validations/company.validation");
+const { Validate } = require("../../validations/company.validation");
 const Goals = require("../../models/goals.model");
+const { sendEmailAsLink } = require("../../auth/email/link.auth");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -56,20 +55,18 @@ const CompanyController = {
         return commonErrors(res, 400, {
           response: "This email doesn't have any access to register again",
         });
-      sendEmail(email).then((responses) => {
+      sendEmailAsLink(email).then((responses) => {
         if (!res.status)
           return commonErrors(res, 404, {
             response: "otp has been not sended, Please try again ",
           });
-        let otp = responses.otp;
+        let authenticateEmail = responses;
         let validationData = {
           email: email,
-          otp: otp,
-          verified: false,
         };
 
-        let storingOtp = setObject(validationData);
-        if (storingOtp == false)
+        let storingcompanydata = setObject(validationData);
+        if (storingcompanydata == false)
           return commonErrors(res, 404, {
             response: "Somthing went worng, please refresh and try again",
           });
@@ -102,16 +99,16 @@ const CompanyController = {
   },
   async registeringIntialData(req, res) {
     try {
-      const { name, number, password, document, otp } = req.body;
+      const { name, number, password, document, email } = req.body;
 
-      let retriveotp = await redisGet(JSON.stringify(otp));
+      let retrivedata = await redisGet(JSON.stringify(email));
 
-      if (!retriveotp) {
+      if (!retrivedata) {
         return commonErrors(res, 400, {
           message: "Please verify your email agin",
         });
       }
-      let parsedData = JSON.parse(retriveotp);
+      let parsedData = JSON.parse(retrivedata);
       let existingUserOrCompany = await Promise.all([
         User.findOne({ email: parsedData.email }),
         Company.findOne({ email: parsedData.email }),
@@ -121,11 +118,7 @@ const CompanyController = {
         return commonErrors(res, 400, {
           response: "This email doesn't have any access to register again",
         });
-      if (!parsedData.verified)
-        return commonErrors(res, 400, {
-          message:
-            "This details not verified, Please verify your email for further process otp",
-        });
+
       let retrivingCachedData = await redisGet(parsedData.email);
       if (retrivingCachedData) {
         let parsing = JSON.parse(retrivingCachedData);
@@ -307,7 +300,7 @@ const CompanyController = {
           message: "Please Register Your Company",
         });
 
-      const isValidPassword = await campare(password, company.password);
+      const isValidPassword = await campare(password, email, company.password);
 
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });

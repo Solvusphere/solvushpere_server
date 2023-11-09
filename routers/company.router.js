@@ -4,7 +4,7 @@ const dashboardController = require('../controllers/company/profile.controller')
 const router = express();
 
 router.post("/verifyemail", comapnyController.verifyEmail);
-router.post("/verifyotp", comapnyController.verifyOtp);
+// router.post("/verifyotp", comapnyController.verifyOtp);
 router.post("/initalregister", comapnyController.registeringIntialData);
 router.post("/detailedRegistration", comapnyController.completeRegistration);
 router.post('/login', comapnyController.login)
