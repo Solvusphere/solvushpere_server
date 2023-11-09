@@ -36,7 +36,7 @@ const requirments = {
   image: Joi.string().required(),
   name: Joi.string().required(),
   description: Joi.string().required(),
-  solution: Joi.string().min(4).required(),
+  goals: Joi.string().min(4).required(),
 };
 
 const CompanyController = {
@@ -206,7 +206,7 @@ const CompanyController = {
         }
       }
 
-      const { founder, logo, solution, image, web_url, industry, services } =
+      const { founder, logo, image, web_url, industry, services, goals } =
         req.body;
       const companyData = {
         founder,
@@ -215,8 +215,8 @@ const CompanyController = {
         web_url,
         industry,
         services,
+        goals,
       };
-
       const value = await Company.findById(id).exec();
       if (!value) {
         return commonErrors(res, 400, {
@@ -230,31 +230,55 @@ const CompanyController = {
           image: requirments.image,
           web_url: requirments.web_url,
           industry: requirments.industry,
-          solution: requirments.solution,
           services: {
             image: requirments.image,
             name: requirments.name,
             description: requirments.description,
           },
+          goals: {
+            solution: requirments.goals,
+            vision: requirments.goals,
+            mission: requirments.goals,
+          },
         },
         companyData
       );
-      if (validatingDatas.status == false)
+      if (validatingDatas.status == false) {
         return commonErrors(res, 400, {
           message: validatingDatas.response[0].message,
         });
+      }
+      let companyGoal = {
+        solution: goals.solution,
+        vision: goals.vision,
+        mission: goals.mission,
+        company_id: id,
+      };
+      let createdSolution = new Goals(companyGoal);
+      if (!createdSolution) {
+        redisSet(id, companyData);
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
+      let savingSolution = await createdSolution.save();
+      if (!savingSolution) {
+        redisSet(id, companyData);
+
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
+      }
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
         companyData
       ).exec();
-
       if (!savingCompleteData) {
         redisSet(id, companyData);
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
       }
-      let SavingSolution=Goals.fi
       // Data successfully
       res
         .status(200)
@@ -305,7 +329,6 @@ const CompanyController = {
       return commonErrors(error, 500, { message: "Internal Server Error" });
     }
   },
-  
 };
 
 module.exports = CompanyController;

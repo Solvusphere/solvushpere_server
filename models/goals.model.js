@@ -14,7 +14,7 @@ const GoalsModel = new mongoose.Schema({
     required: true,
   },
   company_id: {
-    tyrp: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "companies",
   },
 });
