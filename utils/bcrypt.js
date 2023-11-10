@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-
+require("dotenv").config();
 module.exports.hashPassword = async (password, email) => {
   try {
     let salt = await bcrypt.genSalt(10); // Wait for the salt to be generated

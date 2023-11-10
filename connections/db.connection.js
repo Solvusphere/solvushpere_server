@@ -1,18 +1,25 @@
 function DBconnections() {
   const mongoose = require("mongoose");
-
+  require("dotenv").config();
   mongoose
-    .connect(
-      "mongodb+srv://Solvusphere:4GCr2kfGY6kJa3bT@cluster0.eewbchx.mongodb.net/solvusphere",
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    )
+    .connect(process.env.MONGO_CONNECTION, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 10,
+    })
     .then((res) => {
       console.log("connected to database");
     })
     .catch((err) => console.log(err));
 }
+
+process.on("SIGINT", () => {
+  mongooseConnection.close(() => {
+    console.log(
+      "Mongoose default connection disconnected through app termination"
+    );
+    process.exit(0);
+  });
+});
 
 module.exports = { DBconnections };

@@ -33,9 +33,9 @@ module.exports.redisReSet = (key, value) => {
 
 module.exports.setObject = (datas) => {
   console.log(datas);
-  client.set(datas.email, JSON.stringify(datas), (err) => {
+  client.set(`${datas.email}_verify`, JSON.stringify(datas), (err) => {
     if (err) return false;
-  console.log(datas);
+    console.log(datas);
     client.expire(datas.email, 300);
     return true;
   });
