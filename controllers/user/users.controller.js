@@ -147,6 +147,8 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
+
+  
 };
 
 module.exports = UserController;
