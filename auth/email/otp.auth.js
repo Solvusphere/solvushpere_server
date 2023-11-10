@@ -6,7 +6,6 @@ const {
 
 module.exports.verifyOtp = async (sendedotp) => {
   let takecompanyOtp = await redisGet(`${sendedotp}`);
-
   if (takecompanyOtp == null)
     return {
       status: false,

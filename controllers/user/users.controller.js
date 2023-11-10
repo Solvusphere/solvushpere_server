@@ -106,6 +106,7 @@ const UserController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
+
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -146,5 +147,8 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
+
+  
 };
+
 module.exports = UserController;
