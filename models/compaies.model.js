@@ -29,8 +29,9 @@ const comapnyModel = new mongoose.Schema({
     type: String,
     // required: true,
   },
-  solution: {
+  goals: {
     type: mongoose.Schema.Types.ObjectId,
+    ref: "goals",
     // required: true,
   },
   web_url: {
@@ -113,11 +114,11 @@ const comapnyModel = new mongoose.Schema({
   remining_slots: {
     big: {
       type: Number,
-      default:0
+      default: 0,
     },
     small: {
       type: Number,
-      default:0
+      default: 0,
     },
   },
 });

@@ -225,35 +225,22 @@ const CompanyController = {
         mission: goals.mission,
         company_id: id,
       };
-      let cheakingIfAlreadyExist = await Goals.findOne({ company_id: id });
-      if (cheakingIfAlreadyExist) {
-        let updateSolution = await Goals.updateOne(
-          { company_id: id },
-          {
-            $set: {
-              solution: goals.solution,
-              vision: goals.vision,
-              mission: goals.mission,
-            },
-          }
-        );
-      } else {
-        let createdSolution = new Goals(companyGoal);
-        if (!createdSolution) {
-          redisSet(id, companyData);
-          return commonErrors(res, 400, {
-            message: `Something went wrong, but your data will be stored temporarily.1`,
-          });
-        }
-        let savingSolution = await createdSolution.save();
-        if (!savingSolution) {
-          redisSet(id, companyData);
+      let updatedGoal = await Goals.findOneAndUpdate(
+        { company_id: id },
+        {
+          $set: companyGoal,
+        },
+        { new: true, upsert: true }
+      );
 
-          return commonErrors(res, 400, {
-            message: `Something went wrong, but your data will be stored temporarily.2`,
-          });
-        }
+      if (!updatedGoal) {
+        redisSet(id, companyData);
+        return commonErrors(res, 400, {
+          message: `Something went wrong, but your data will be stored temporarily.`,
+        });
       }
+
+      companyData.goals = updatedGoal._id;
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
         companyData

@@ -4,6 +4,7 @@ const GoalsModel = new mongoose.Schema({
   solution: {
     type: String,
     required: true,
+    index: true,
   },
   vision: {
     type: String,
@@ -16,6 +17,7 @@ const GoalsModel = new mongoose.Schema({
   company_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "companies",
+    index: true,
   },
 });
 
