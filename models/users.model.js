@@ -18,12 +18,6 @@ const usermodel = new mongoose.Schema({
   password: {
     type: String,
   },
-<<<<<<< HEAD
-  verified: {
-    type: Boolean,
-    required:true
-  }
-=======
   registered: {
     type: Boolean,
     required: true,
@@ -44,7 +38,6 @@ const usermodel = new mongoose.Schema({
       },
     },
   ],
->>>>>>> user-solution
 });
 
 let User = mongoose.model("user", usermodel);
