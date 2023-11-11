@@ -1,12 +1,15 @@
-const Admin = require("../../models/admin.model");
-const Jwt = require("jsonwebtoken");
-const Joi = require("joi");
-const { hashPassword, campare } = require("../../utils/bcrypt");
-const { Validate } = require("../../validations/admin.validation");
-const { commonErrors } = require("../../middlewares/error/commen.error");
-const { sendEmail } = require("../../auth/email/nodemailer.auth");
-const { setObject, redisGet } = require("../../connections/redis.connection");
-const { verifyOtp } = require("../../auth/email/otp.auth");
+const Admin = require('../../models/admin.model')
+const Jwt = require('jsonwebtoken') 
+const Joi = require('joi')
+const { hashPassword,campare } = require('../../utils/bcrypt')
+const { Validate } = require('../../validations/admin.validation')
+const { commonErrors } = require('../../middlewares/error/commen.error')
+const {sendEmail} = require('../../auth/email/nodemailer.auth')
+const { setObject,redisGet } = require('../../connections/redis.connection') 
+const {verifyOtp} = require('../../auth/email/otp.auth')
+const Company = require('../../models/compaies.model')
+const User = require('../../models/users.model')
+
 const requirments = {
   number: Joi.number().min(10).required(),
   password: Joi.string().min(8).required(),

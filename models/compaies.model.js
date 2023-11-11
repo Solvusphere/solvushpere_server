@@ -17,7 +17,13 @@ const comapnyModel = new mongoose.Schema({
     type: String,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    required:true
+  },
+  
   founder: {
+
     type: String,
     // required: true,
   },

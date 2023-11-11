@@ -10,6 +10,8 @@ const { Validate } = require("../../validations/user.validation");
 const { hashPassword, campare } = require("../../utils/bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const { sendEmailAsLink } = require("../../auth/email/link.auth");
+const { generateAccessToken, generateRefreshToken,regenerateAccessToken } = require("../../auth/Jwt/jwt.auth")
+require('dotenv').config()
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -106,6 +108,7 @@ const UserController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
+
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -135,7 +138,11 @@ const UserController = {
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
       const payload = { _id: user._id, name: user.username, email: user.email };
 
-      let token = Jwt.sign(payload, "#$solvusphere$#");
+      // setup of access token and refresh token
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
+      let token = {accessToken,refreshToken}
+
       return commonErrors(res, 200, {
         message: "Login Successfully",
         token,
@@ -146,5 +153,46 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
+  async userProfile(req,res) {
+    try {
+
+      const { id } = req.params
+      
+      
+      
+    } catch (error) {
+      console.log(error);
+      commonErrors(error,500,{message:"Internal Server Error"})
+    }
+  },
+
+  async regenerate_token(req, res) {
+    try {
+       const authHeader = req.headers['authorization'];
+      const refreshToken = authHeader && authHeader.split(' ')[1];
+      let claim = Jwt.verify(refreshToken, process.env.SECRET_KEY, (err, user) => {
+        if (err) {
+          return res.sendStatus(403); 
+        }
+
+      })
+
+      const user =  await  User.findOne({_id:claim._id})
+      const payload = { _id: user._id, name: user.username, email: user.email };
+      const token = regenerateAccessToken(refreshToken, payload)
+      if (!token) return commonErrors(res,403,{message:"some went wrong"})
+      return res.status(200).send({token,message:"Token Regenerated Successfully"})
+      
+    } catch (error) {
+      console.log(error);
+      commonErrors(error,500,{message:"Internal Server Error!!"})
+    }
+  }
+
+
+
+
+  
 };
+
 module.exports = UserController;
