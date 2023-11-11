@@ -15,4 +15,6 @@ router.post('/company_list', AdminCompanyController.companyList)
 router.post('/block_user/:id',AdminCompanyController.blockCompany)
 
 
+
+router.post("/industry/add",adminController.create_insustry)
 module.exports = router

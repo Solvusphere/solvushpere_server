@@ -48,7 +48,7 @@ const ProfileController = {
       let changinData = await Goals.findOne(
         { company_id: id },
         { $set: { solution: solution } }
-      );
+      ); 
       if (!changinData)
         return commonErrors(res, 400, {
           message: "somthing went worng, Your cahnges not saved ",

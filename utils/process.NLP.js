@@ -26,7 +26,7 @@ const processingResult = async (id, problem) => {
     if (matchingCompanies.length != 0) {
       return matchedcompanies;
     } else {
-
+      
     }
   } else {
     // console.log(fetchingSolutions);
