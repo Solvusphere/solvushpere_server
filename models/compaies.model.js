@@ -34,12 +34,13 @@ const comapnyModel = new mongoose.Schema({
     ref: "goals",
     // required: true,
   },
-  web_url: {
+  web_url:{
     type: String,
     // required: true,
   },
   industry: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "industries",
     // required: true,
   },
   document: {

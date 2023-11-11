@@ -8,4 +8,6 @@ router.post('/verifyOtp',adminController.verifyOtp)
 router.post('/registration', adminController.registration)
 router.post('/login', adminController.login)
 
+
+router.post("/industry/add",adminController.create_insustry)
 module.exports = router

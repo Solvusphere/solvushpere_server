@@ -7,12 +7,14 @@ const { commonErrors } = require("../../middlewares/error/commen.error");
 const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const { setObject, redisGet } = require("../../connections/redis.connection");
 const { verifyOtp } = require("../../auth/email/otp.auth");
+const Industry = require("../../models/industry.model");
 const requirments = {
   number: Joi.number().min(10).required(),
   password: Joi.string().min(8).required(),
   email: Joi.string().email().required(),
   name: Joi.string().min(3).required(),
   otp: Joi.number().required(),
+  industry: Joi.string().required(),
 };
 
 const adminController = {
@@ -162,6 +164,33 @@ const adminController = {
         token,
         admin,
       });
+    } catch (error) {
+      console.log(error);
+      return commonErrors(error, 500, { message: "Internal Server Error" });
+    }
+  },
+  async create_insustry(req, res) {
+    try {
+      let { industry } = req.body;
+      let trimData = industry.trim();
+      let validateData = Validate(
+        { industry: industry },
+        { industry: trimData }
+      );
+      if (!validateData)
+        return commonErrors(res, 404, {
+          message: "Invalide data, Please fill the field  ",
+        });
+      let insetingData =await  Industry.findOneAndUpdate(
+        { name: trimData },
+        { name: trimData },
+        { new: true, upsert: true }
+      );
+      if (!insetingData)
+        return commonErrors(res, 404, {
+          message: "Internal server error, Please refresh the page and try it ",
+        });
+      return res.status(200).send({ messge: "New industry is added " });
     } catch (error) {
       console.log(error);
       return commonErrors(error, 500, { message: "Internal Server Error" });

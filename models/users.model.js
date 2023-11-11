@@ -1,3 +1,4 @@
+const { boolean } = require("joi");
 const mongoose = require("mongoose");
 
 const usermodel = new mongoose.Schema({
@@ -17,6 +18,26 @@ const usermodel = new mongoose.Schema({
   password: {
     type: String,
   },
+  registered: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  recommented: [
+    {
+      indestr_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        requried: true,
+      },
+      count: {
+        type: Number,
+      },
+      company_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        requried: true,
+      },
+    },
+  ],
 });
 
 let User = mongoose.model("user", usermodel);

@@ -10,8 +10,9 @@ const solutionController = {
       );
       let fetchingCompanies = await Company.find({
         _id: { $in: companyIds },
-      }).populate('goals');
+      }).populate("goals");
       console.log(fetchingCompanies);
+      
       if (fetchingCompanies) res.status(200).send(fetchingCompanies);
     } catch (error) {
       console.log(error);
