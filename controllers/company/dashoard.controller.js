@@ -38,7 +38,7 @@ const requirments = {
 };
 
 const CompanyController = {
-  async verifyEmail(req, res) {
+  async verify_Email(req, res) {
     try {
       const { email } = req.body;
       let validating = Validate({ email: requirments.email }, { email });
@@ -77,7 +77,7 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async registeringIntialData(req, res) {
+  async registering_Intial_Data(req, res) {
     try {
       const { name, number, password, document, email } = req.body;
 
@@ -159,7 +159,7 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async completeRegistration(req, res) {
+  async complete_Registration(req, res) {
     try {
       let { id } = req.body;
       let checkingCache = await redisGet(id);

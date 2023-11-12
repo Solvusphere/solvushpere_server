@@ -3,8 +3,8 @@ const User = require('../../models/users.model')
 const Jwt = require('jsonwebtoken')
 const { commonErrors } = require('../../middlewares/error/commen.error')
 
-const UserController = {
-    async userList(req, res) {
+const AdminUserController = {
+    async user_List(req, res) {
         try {
             const userList = await User.find({}).sort({verified:1})
             if (!userList) {
@@ -18,7 +18,7 @@ const UserController = {
         }
     },
 
-    async blockUser(req, res) {
+    async block_User(req, res) {
         try {
             const { id } = req.params
             const block = await User.updateOne({ _id: id }, { $set: { verified: false } });
@@ -32,4 +32,4 @@ const UserController = {
     },
 }
 
-module.exports = UserController
+module.exports = AdminUserController
