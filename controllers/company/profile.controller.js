@@ -22,7 +22,7 @@ const requirments = {
 };
 
 const ProfileController = {
-  async fetchingProfile(req, res) {
+  async fetching_Profile(req, res) {
     try {
       const { id } = req.body;
       const data = await Company.findOne({ _id: id });
@@ -61,7 +61,7 @@ const ProfileController = {
     }
   },
 
-  async editProfile(req, res) {
+  async edit_Profile(req, res) {
     try {
       const {} = req.body;
     } catch (error) {

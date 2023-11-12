@@ -7,7 +7,7 @@ const { commonErrors } = require('../../middlewares/error/commen.error')
 const CompanyController = {
 
     
-    async companyList(req, res) {
+    async company_List(req, res) {
         try {
             const companyList = await Company.find({}).sort({verified:1})
             if (!companyList)
@@ -19,7 +19,7 @@ const CompanyController = {
     }
     },
     
-    async blockCompany(req, res) {
+    async block_Company(req, res) {
         try {
             const { id } = req.params
             const block = await Company.updateOne({ _id: id }, { $set: { verified: false } });

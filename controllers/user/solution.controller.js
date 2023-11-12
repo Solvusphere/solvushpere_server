@@ -2,7 +2,7 @@ const Company = require("../../models/compaies.model");
 const { processingResult } = require("../../utils/process.NLP");
 
 const solutionController = {
-  async processSolution(req, res) {
+  async process_Solution(req, res) {
     try {
       let { problem, id } = req.body;
       let companyIds = (await processingResult(id, problem)).map(
