@@ -11,4 +11,6 @@ router.post('/user-list', AdminUserController.user_List)
 router.post('/block-user/:id',AdminUserController.block_User)
 
 
+
+router.post("/industry/add",adminController.create_insustry)
 module.exports = router
