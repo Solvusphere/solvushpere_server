@@ -1,3 +1,4 @@
+const { commonErrors } = require("../../middlewares/error/commen.error");
 const Company = require("../../models/compaies.model");
 const User = require("../../models/users.model");
 const { processingResult } = require("../../utils/process.NLP");
@@ -10,35 +11,37 @@ const solutionController = {
       let companyIds = (await processingResult(id, problem)).map(
         (entry) => entry.comapany_id
       );
-      // fetching the companies matched for the solutions 
+      // fetching the companies matched for the solutions
       let fetchingCompanies = await Company.find({
         _id: { $in: companyIds },
-      }).populate("goals");
-      console.log(fetchingCompanies);
-      
-      const newData = {
-        indestr_id: fetchingCompanies[0].industry,
-      };
-    // adding those most fetched datas in to reommendation queue 
-      await User.findOne({ _id: id }).then((user) => {
-        if (user) {
-          // Check if indestr_id already exists in the array
-          const isExisting = user.recommended.some((item) =>
-            item.indestr_id.equals(newData.indestr_id)
-          );
-          if (!isExisting) {
-            // Add the new data to the array
-            user.recommended.push(newData);
-            // Limit the array size to 15
-            if (user.recommended.length > 15) {
-              user.recommended.shift(); // Remove the oldest item
+      }).select("name logo image industry");
+      if (fetchingCompanies.length) {
+        const newData = {
+          indestr_id: fetchingCompanies[0].industry,
+        };
+        // adding those most fetched datas in to reommendation queue
+        await User.findOne({ _id: id }).then((user) => {
+          if (user) {
+            // Check if indestr_id already exists in the array
+            const isExisting = user.recommended.some((item) =>
+              item.indestr_id.equals(newData.indestr_id)
+            );
+            if (!isExisting) {
+              // Add the new data to the array
+              user.recommended.push(newData);
+              // Limit the array size to 15
+              if (user.recommended.length > 15) {
+                user.recommended.shift(); // Remove the oldest item
+              }
+              // Save the updated user document
+              return user.save();
             }
-            // Save the updated user document
-            return user.save();
           }
-        }
-      });
-  
+        });
+      } else {
+        return commonErrors(res, 404, { message: "nothing found " });
+      }
+
       if (fetchingCompanies) res.status(200).send(fetchingCompanies);
     } catch (error) {
       console.log(error);

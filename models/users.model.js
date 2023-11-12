@@ -51,6 +51,7 @@ const usermodel = new mongoose.Schema({
       },
     },
   ],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
 });
 
 let User = mongoose.model("user", usermodel);

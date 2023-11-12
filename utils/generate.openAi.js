@@ -8,8 +8,8 @@ const openai = new OpenAI({
 async function proccessByOpenAi(data) {
   if (data.length > 600) {
     return "Your content is exeeded the maximum limit. Can you please shrink this content ";
-    }
-    let response
+  }
+  let response;
   await openai.chat.completions
     .create({
       messages: [{ role: "user", content: data }],
@@ -21,7 +21,7 @@ async function proccessByOpenAi(data) {
     })
     .catch((err) => console.log(err));
   let responseData = response.choices[0].message.content;
-  console.log(responseData + 'respone');
+  console.log(responseData + "respone");
   if (responseData) return responseData;
 }
 
