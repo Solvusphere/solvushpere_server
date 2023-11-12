@@ -1,5 +1,6 @@
 const natural = require("natural");
 const Goals = require("../models/goals.model");
+const { proccessByOpenAi } = require("./generate.openAi");
 const tokenizer = new natural.WordTokenizer();
 const TfIdf = natural.TfIdf;
 
@@ -26,7 +27,8 @@ const processingResult = async (id, problem) => {
     if (matchingCompanies.length != 0) {
       return matchedcompanies;
     } else {
-      
+      let proccesingUsingAi = proccessByOpenAi(problem);
+      console.log(proccesingUsingAi);
     }
   } else {
     // console.log(fetchingSolutions);

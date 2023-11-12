@@ -5,7 +5,7 @@ const { hashPassword,campare } = require('../../utils/bcrypt')
 const { Validate } = require('../../validations/admin.validation')
 const { commonErrors } = require('../../middlewares/error/commen.error')
 const {sendEmail} = require('../../auth/email/nodemailer.auth')
-const { setObject,redisGet } = require('../../connections/redis.connection') 
+const { setObjectWithExp, redisGet } = require("../../connections/redis.connection"); 
 const {verifyOtp} = require('../../auth/email/otp.auth')
 const Company = require('../../models/compaies.model')
 const User = require('../../models/users.model')
@@ -40,7 +40,7 @@ const adminController = {
         otp: otp,
         verified: false,
       };
-      let storingOtp = setObject(validationData);
+      let storingOtp = setObjectWithExp(validationData);
       if (storingOtp == false)
         return commonErrors(res, 404, {
           response: "Somthing went worng, please refresh and try again",

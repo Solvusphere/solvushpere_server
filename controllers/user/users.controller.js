@@ -1,7 +1,8 @@
 const {
-  setObject,
   redisGet,
   redisDel,
+  redisSet,
+  setObjectWithExp,
 } = require("../../connections/redis.connection");
 const User = require("../../models/users.model");
 const Joi = require("joi");
@@ -10,8 +11,13 @@ const { Validate } = require("../../validations/user.validation");
 const { hashPassword, campare } = require("../../utils/bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const { sendEmailAsLink } = require("../../auth/email/link.auth");
-const { generateAccessToken, generateRefreshToken,regenerateAccessToken } = require("../../auth/Jwt/jwt.auth")
-require('dotenv').config()
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  regenerateAccessToken,
+} = require("../../auth/Jwt/jwt.auth");
+require("dotenv").config();
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -50,7 +56,7 @@ const UserController = {
           email: userData.email,
           username: userData.username,
         };
-        setObject(userdata);
+        setObjectWithExp(userdata);
         res.status(200).send({
           message: "Verification link has been sented into your email",
         });
@@ -80,22 +86,25 @@ const UserController = {
       let userdata = await redisGet(email);
       if (!userdata)
         return commonErrors(res, 404, {
-          error: "Otp has been expaired, please sent verify again  ",
+          error: "Your email isn't verified, please sent verification mail  ",
         });
       let parsing = JSON.parse(userdata);
       let existingEmail = await User.findOne({ email: parsing.email });
       if (existingEmail)
         return commonErrors(res, 409, {
-          warning: "Your aready registered with this email",
+          warning: "Your already registered with this email",
         });
       let createUser = new User({
         username: parsing.username,
         email: parsing.email,
         password: hashingpassword,
+        registered: true,
       });
       await createUser
         .save()
-        .then((res) => {})
+        .then((res) => {
+          redisSet(`str_user${res._id}`, JSON.stringify(res));
+        })
         .catch((err) => {
           throw new Error(err.error.message);
         });
@@ -132,7 +141,9 @@ const UserController = {
         return commonErrors(res, 404, {
           message: "User Not Found",
         });
-
+      redisSet(`str_user${user._id}`, JSON.stringify(user));
+      let retrinve = await redisGet(`str_user${user._id}`);
+      console.log(JSON.parse(retrinve));
       let isValidPassword = campare(password, email, user.password);
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
@@ -141,7 +152,7 @@ const UserController = {
       // setup of access token and refresh token
       const accessToken = generateAccessToken(payload);
       const refreshToken = generateRefreshToken(payload);
-      let token = {accessToken,refreshToken}
+      let token = { accessToken, refreshToken };
 
       return commonErrors(res, 200, {
         message: "Login Successfully",
@@ -153,46 +164,43 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
-  async userProfile(req,res) {
+  async userProfile(req, res) {
     try {
-
-      const { id } = req.params
-      
-      
-      
+      const { id } = req.params;
     } catch (error) {
       console.log(error);
-      commonErrors(error,500,{message:"Internal Server Error"})
+      commonErrors(error, 500, { message: "Internal Server Error" });
     }
   },
 
   async regenerate_token(req, res) {
     try {
-       const authHeader = req.headers['authorization'];
-      const refreshToken = authHeader && authHeader.split(' ')[1];
-      let claim = Jwt.verify(refreshToken, process.env.SECRET_KEY, (err, user) => {
-        if (err) {
-          return res.sendStatus(403); 
+      const authHeader = req.headers["authorization"];
+      const refreshToken = authHeader && authHeader.split(" ")[1];
+      let claim = Jwt.verify(
+        refreshToken,
+        process.env.SECRET_KEY,
+        (err, user) => {
+          if (err) {
+            return res.sendStatus(403);
+          }
         }
-
-      })
-
-      const user =  await  User.findOne({_id:claim._id})
+      );
+      let user = await redisGet(`str_user${claim._id}`);
+      if (!user) {
+        user = await User.findOne({ _id: claim._id });
+      }
       const payload = { _id: user._id, name: user.username, email: user.email };
-      const token = regenerateAccessToken(refreshToken, payload)
-      if (!token) return commonErrors(res,403,{message:"some went wrong"})
-      return res.status(200).send({token,message:"Token Regenerated Successfully"})
-      
+      const token = regenerateAccessToken(refreshToken, payload);
+      if (!token) return commonErrors(res, 403, { message: "some went wrong" });
+      return res
+        .status(200)
+        .send({ token, message: "Token Regenerated Successfully" });
     } catch (error) {
       console.log(error);
-      commonErrors(error,500,{message:"Internal Server Error!!"})
+      commonErrors(error, 500, { message: "Internal Server Error!!" });
     }
-  }
-
-
-
-
-  
+  },
 };
 
 module.exports = UserController;
