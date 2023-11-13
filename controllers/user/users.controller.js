@@ -1,8 +1,8 @@
 const {
-  setObject,
   redisGet,
   redisDel,
   redisSet,
+  setObjectWithExp,
 } = require("../../connections/redis.connection");
 const User = require("../../models/users.model");
 const Joi = require("joi");
@@ -11,6 +11,7 @@ const { Validate } = require("../../validations/user.validation");
 const { hashPassword, campare } = require("../../utils/bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const { sendEmailAsLink } = require("../../auth/email/link.auth");
+
 const { generateAccessToken, generateRefreshToken, reGenerateAccessToken, verify_Token } = require("../../auth/Jwt/jwt.auth");
 const { use } = require("../../routers/admin.router");
 require('dotenv').config();
@@ -53,7 +54,7 @@ const UserController = {
           email: userData.email,
           username: userData.username,
         };
-        setObject(userdata);
+        setObjectWithExp(userdata);
         res.status(200).send({
           message: "Verification link has been sented into your email",
         });
@@ -83,13 +84,13 @@ const UserController = {
       let userdata = await redisGet(`${email}_verify`);
       if (!userdata)
         return commonErrors(res, 404, {
-          error: "Otp has been expaired, please sent verify again  ",
+          error: "Your email isn't verified, please sent verification mail  ",
         });
       let parsing = JSON.parse(userdata);
       let existingEmail = await User.findOne({ email: parsing.email });
       if (existingEmail)
         return commonErrors(res, 409, {
-          warning: "Your aready registered with this email",
+          warning: "Your already registered with this email",
         });
       let createUser = new User({
         username: parsing.username,
@@ -99,7 +100,9 @@ const UserController = {
       });
       await createUser
         .save()
-        .then((res) => {})
+        .then((res) => {
+          redisSet(`str_user${res._id}`, JSON.stringify(res));
+        })
         .catch((err) => {
           throw new Error(err.error.message);
         });
@@ -112,7 +115,7 @@ const UserController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-
+   
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -134,8 +137,12 @@ const UserController = {
 
       let user = await User.findOne({ email: email });
       if (!user)
-        return commonErrors(res, 404, {message: "User Not Found"});
-        
+        return commonErrors(res, 404, {
+          message: "User Not Found",
+        });
+      redisSet(`str_user${user._id}`, JSON.stringify(user));
+      let retrinve = await redisGet(`str_user${user._id}`);
+      console.log(JSON.parse(retrinve));
       let isValidPassword = campare(password, email, user.password);
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
@@ -156,6 +163,7 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
+
 
   async user_Profile(req,res) {
     try {
@@ -288,19 +296,12 @@ const UserController = {
       const token = reGenerateAccessToken(refreshToken, payload);
       if (!token) return commonErrors(res, 403, { message: "some went wrong" });
       return res.status(200).send({ token, message: "Token Regenerated Successfully" });
-      
     } catch (error) {
       console.log(error);
-      commonErrors(error,500,{message:"Internal Server Error!!"})
+      commonErrors(error, 500, { message: "Internal Server Error!!" });
     }
   },
 
-
-
-
-
-
-  
 };
 
 module.exports = UserController;
