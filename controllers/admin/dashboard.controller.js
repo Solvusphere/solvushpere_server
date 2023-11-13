@@ -20,7 +20,6 @@ const requirments = {
   industry: Joi.string().required(),
 };
 
-const adminController = {
   async verifyEmail(req, res) {
     const { email } = req.body;
     let validating = Validate({ email: requirments.email }, { email });
@@ -134,6 +133,7 @@ const adminController = {
     }
   },
 
+
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -156,12 +156,16 @@ const adminController = {
         });
 
       const isValidPassword = await campare(password, email, admin.password);
-      console.log(isValidPassword, "klf");
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
 
       const payload = { _id: admin._id, name: admin.name, email: admin.email };
-      const token = Jwt.sign(payload, "#$solvusphere$#");
+      
+      // setup of access token and refresh token
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
+      let token = { accessToken, refreshToken }
+      
       return commonErrors(res, 200, {
         message: "Login Successfully",
         token,

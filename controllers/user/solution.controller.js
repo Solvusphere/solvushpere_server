@@ -4,7 +4,7 @@ const User = require("../../models/users.model");
 const { processingResult } = require("../../utils/process.NLP");
 
 const solutionController = {
-  async processSolution(req, res) {
+  async process_Solution(req, res) {
     try {
       let { problem, id } = req.body;
       // proccessing data using NLP and finding the better solution for the user problem

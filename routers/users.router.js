@@ -7,15 +7,20 @@ const router = express();
 
 // user controller routes
 
-router.post("/register", UserController.verifyEmail);
-router.post("/verifypass", UserController.registering);
-router.post("/login", UserController.login);
-router.get("/user-profile/:id", UserController.userProfile);
-router.post("/token-update", UserController.regenerate_token);
 
 // user-solutoins  controller routes
 
 router.post("/problem", solutionController.processSolution);
+
+router.post("/register", UserController.verify_Email);
+router.post("/create-password", UserController.registering);
+router.post("/login", UserController.login);
+router.post("/problem", solutionController.process_Solution);
+router.get("/user-profile", UserController.user_Profile);
+router.post('/token-update', UserController.regenerate_Token);
+router.get("/edit-profile", UserController.edit_Profile);
+router.post("/edit-profile",UserController.update_Profile)
+
 
 // user-companies controller routes
 

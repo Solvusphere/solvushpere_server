@@ -12,12 +12,8 @@ const { hashPassword, campare } = require("../../utils/bcrypt");
 const { commonErrors } = require("../../middlewares/error/commen.error");
 const { sendEmailAsLink } = require("../../auth/email/link.auth");
 
-const {
-  generateAccessToken,
-  generateRefreshToken,
-  regenerateAccessToken,
-} = require("../../auth/Jwt/jwt.auth");
-require("dotenv").config();
+const { generateAccessToken, generateRefreshToken, reGenerateAccessToken, verify_Token } = require("../../auth/Jwt/jwt.auth");
+require('dotenv').config();
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -27,7 +23,7 @@ const requirments = {
 };
 
 const UserController = {
-  async verifyEmail(req, res) {
+  async verify_Email(req, res) {
     try {
       const { username, email } = req.body;
       let userData = {
@@ -38,13 +34,14 @@ const UserController = {
         { username: requirments.username, email: requirments.email },
         userData
       );
+      if (!validating.status)
+        return res.status(400).send(validating.response[0].message);
+
       let existingEmail = await User.findOne({ email: email });
       if (existingEmail)
         return commonErrors(res, 409, {
           warning: "Your aready registered with this email",
         });
-      if (!validating.status)
-        return res.status(400).send(validating.response[0].message);
 
       let authenticateEmail;
       sendEmailAsLink(userData.email).then(async (response) => {
@@ -164,43 +161,75 @@ const UserController = {
       return commonErrors(res, 500, { message: "Internal Server Error" });
     }
   },
-  async userProfile(req, res) {
+
+
+  async user_Profile(req,res) {
     try {
-      const { id } = req.params;
+      const { accessToken } = req.body;
+      let claim = verify_Token(accessToken);
+      if (!claim) {
+        res.cookie("jwt", "", { maxAge: 0 });
+        commonErrors(res,)
+      }
+      const user = await User.findOne({ _id: claim._id });
+      if (!user) return commonErrors(res, 404, { message: "Userdata Not Found!!" });
+      return res.status(200).send(user);
     } catch (error) {
       console.log(error);
       commonErrors(error, 500, { message: "Internal Server Error" });
     }
   },
 
-  async regenerate_token(req, res) {
+  async edit_Profile(req, res) {
     try {
-      const authHeader = req.headers["authorization"];
-      const refreshToken = authHeader && authHeader.split(" ")[1];
-      let claim = Jwt.verify(
-        refreshToken,
-        process.env.SECRET_KEY,
-        (err, user) => {
-          if (err) {
-            return res.sendStatus(403);
-          }
-        }
-      );
-      let user = await redisGet(`str_user${claim._id}`);
-      if (!user) {
-        user = await User.findOne({ _id: claim._id });
-      }
+      // const id = taking from headers
+      const user = await User.findOne({ _id: id })
+      if(!user) return commonErrors(res,404,{message:"User Not Found!!"})
+      res.status(200).send(user)
+      
+    } catch (error) {
+      console.log(error);
+      commonErrors(res,500,{message:"Internal Server Error"})
+    }
+  },
+
+  async update_Profile(req, res) {
+    try {
+      
+      const { username, number, accessToken } = req.body;
+      let claim = verify_Token(accessToken);
+      if(!claim) return 
+      const user = await User.findOne({})
+      if (!user) return commonErrors(res, 404, { message: "User Not Found!!" })
+      const update = await User.updateOne({},{$set:{username:username,number:number}})
+      if (update.modifiedCount === 0) return commonErrors(res, 403, { message: "Profile Update Failed" })
+      return res.status(200).send(user)
+    } catch (error) {
+       console.log(error);
+      commonErrors(res,500,{message:"Internal Server Error"})
+    }
+  },
+
+
+
+  async regenerate_Token(req, res) {
+    try {
+      const { refreshToken } = req.body;
+      let claim = verify_Token(refreshToken);
+      const user = await User.findOne({ _id: claim._id });
+      if (!user) return commonErrors(res, 404, { message: "User Not Found, Please Login" });
       const payload = { _id: user._id, name: user.username, email: user.email };
-      const token = regenerateAccessToken(refreshToken, payload);
+      
+      // regenerate token
+      const token = reGenerateAccessToken(refreshToken, payload);
       if (!token) return commonErrors(res, 403, { message: "some went wrong" });
-      return res
-        .status(200)
-        .send({ token, message: "Token Regenerated Successfully" });
+      return res.status(200).send({ token, message: "Token Regenerated Successfully" });
     } catch (error) {
       console.log(error);
       commonErrors(error, 500, { message: "Internal Server Error!!" });
     }
   },
+
 };
 
 module.exports = UserController;
