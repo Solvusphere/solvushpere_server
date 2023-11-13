@@ -21,7 +21,7 @@ const requirments = {
 };
 
 const adminController = {
-  
+
 
   async login(req, res) {
     try {
