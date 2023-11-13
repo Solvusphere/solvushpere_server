@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const visitorSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    unique: true,
+  },
+  visite_count: {
+    type: Number,
+    default: 0,
+  },
+  lastVisitedTimestamp: {
+    type: Date,
+    default: null,
+  },
+});
+
 const comapnyModel = new mongoose.Schema({
   name: {
     type: String,
@@ -19,11 +35,10 @@ const comapnyModel = new mongoose.Schema({
   },
   verified: {
     type: Boolean,
-    required:true
+    required: true,
   },
-  
-  founder: {
 
+  founder: {
     type: String,
     // required: true,
   },
@@ -40,7 +55,7 @@ const comapnyModel = new mongoose.Schema({
     ref: "goals",
     // required: true,
   },
-  web_url:{
+  web_url: {
     type: String,
     // required: true,
   },
@@ -76,6 +91,9 @@ const comapnyModel = new mongoose.Schema({
   visite_count: {
     type: Number,
   },
+  lastVisitedTimestamp: {
+    type: Date,
+  },
   account_status: {
     type: Boolean,
     // required: true,
@@ -89,14 +107,7 @@ const comapnyModel = new mongoose.Schema({
     type: Date,
     // required: true,
   },
-  follows: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
-      },
-    },
-  ],
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
   views: [
     {
       user: {
