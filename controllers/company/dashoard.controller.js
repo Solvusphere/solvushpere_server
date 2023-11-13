@@ -7,7 +7,7 @@ const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const {
   redisDel,
   redisSet,
-  setObject,
+  setObjectWithExp,
   redisReSet,
   redisGet,
 } = require("../../connections/redis.connection");
@@ -19,6 +19,7 @@ const { hashPassword, campare } = require("../../utils/bcrypt");
 const { Validate } = require("../../validations/company.validation");
 const Goals = require("../../models/goals.model");
 const { sendEmailAsLink } = require("../../auth/email/link.auth");
+const Industry = require("../../models/industry.model");
 
 const requirments = {
   password: Joi.string().min(8).required(),
@@ -38,7 +39,7 @@ const requirments = {
 };
 
 const CompanyController = {
-  async verifyEmail(req, res) {
+  async verify_Email(req, res) {
     try {
       const { email } = req.body;
       let validating = Validate({ email: requirments.email }, { email });
@@ -65,7 +66,7 @@ const CompanyController = {
           email: email,
         };
 
-        let storingcompanydata = setObject(validationData);
+        let storingcompanydata = setObjectWithExp(validationData);
         if (storingcompanydata == false)
           return commonErrors(res, 404, {
             response: "Somthing went worng, please refresh and try again",
@@ -77,7 +78,7 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async registeringIntialData(req, res) {
+  async registering_Intial_Data(req, res) {
     try {
       const { name, number, password, document, email } = req.body;
 
@@ -159,7 +160,7 @@ const CompanyController = {
       return res.status(500).send({ error: "Internal Server Error" });
     }
   },
-  async completeRegistration(req, res) {
+  async complete_Registration(req, res) {
     try {
       let { id } = req.body;
       let checkingCache = await redisGet(id);
@@ -179,12 +180,11 @@ const CompanyController = {
 
       const { founder, logo, image, web_url, industry, services, goals } =
         req.body;
-      const companyData = {
+      let companyData = {
         founder,
         logo,
         image,
         web_url,
-        industry,
         services,
         goals,
       };
@@ -200,7 +200,7 @@ const CompanyController = {
           logo: requirments.logo,
           image: requirments.image,
           web_url: requirments.web_url,
-          industry: requirments.industry,
+          industry: industry,
           services: {
             image: requirments.image,
             name: requirments.name,
@@ -225,28 +225,41 @@ const CompanyController = {
         mission: goals.mission,
         company_id: id,
       };
-      let updatedGoal = await Goals.findOneAndUpdate(
-        { company_id: id },
-        {
-          $set: companyGoal,
-        },
-        { new: true, upsert: true }
-      );
-
-      if (!updatedGoal) {
-        redisSet(id, companyData);
+      const [updatedGoal, updatedIndustry] = await Promise.all([
+        Goals.findOneAndUpdate(
+          { company_id: id },
+          { $set: companyGoal },
+          { new: true, upsert: true }
+        ),
+        Industry.findOneAndUpdate(
+          { name: industry },
+          { $set: { name: industry } },
+          { new: true, upsert: true }
+        ),
+      ]);
+      if (!updatedGoal || !updatedIndustry) {
+        redisSet(id, JSON.stringify(companyData));
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.`,
         });
       }
+      companyData = {
+        ...companyData,
+        goals: updatedGoal._id,
+        industry: updatedIndustry._id,
+        account_status: true,
+        registration_data: Date.now(),
+        latest_update_data: Date.now(),
+        registered: true,
+      };
 
-      companyData.goals = updatedGoal._id;
       const savingCompleteData = await Company.findByIdAndUpdate(
         id,
         companyData
+        ,{new:true,upsert:true}
       ).exec();
       if (!savingCompleteData) {
-        redisSet(id, companyData);
+        redisSet(id, JSON.stringify(companyData));
         return commonErrors(res, 400, {
           message: `Something went wrong, but your data will be stored temporarily.3`,
         });

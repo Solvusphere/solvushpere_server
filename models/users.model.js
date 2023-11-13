@@ -1,4 +1,12 @@
+const { boolean } = require("joi");
 const mongoose = require("mongoose");
+
+const RecommendedSchema = mongoose.Schema({
+  indestr_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+});
 
 const usermodel = new mongoose.Schema({
   username: {
@@ -17,10 +25,33 @@ const usermodel = new mongoose.Schema({
   password: {
     type: String,
   },
-  verified: {
+  registered: {
     type: Boolean,
-    required:true
-  }
+    required: true,
+    default: false,
+  },
+  recommended: {
+    type: [RecommendedSchema],
+    validate: {
+      validator: function (v) {
+        // Adjust the limit as per your needs
+        return v.length <= 15; // Set the maximum size of the array
+      },
+      message: (props) => `${props.value} exceeds the limit of 5 items!`,
+    },
+  },
+  resentViewed: [
+    {
+      company_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        require: true,
+      },
+      watched_time: {
+        type: Date,
+      },
+    },
+  ],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
 });
 
 let User = mongoose.model("user", usermodel);

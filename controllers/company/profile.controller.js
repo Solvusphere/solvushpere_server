@@ -22,7 +22,7 @@ const requirments = {
 };
 
 const ProfileController = {
-  async fetchingProfile(req, res) {
+  async fetching_Profile(req, res) {
     try {
       const { id } = req.body;
       const data = await Company.findOne({ _id: id });
@@ -48,7 +48,7 @@ const ProfileController = {
       let changinData = await Goals.findOne(
         { company_id: id },
         { $set: { solution: solution } }
-      );
+      ); 
       if (!changinData)
         return commonErrors(res, 400, {
           message: "somthing went worng, Your cahnges not saved ",
@@ -61,7 +61,7 @@ const ProfileController = {
     }
   },
 
-  async editProfile(req, res) {
+  async edit_Profile(req, res) {
     try {
       const {} = req.body;
     } catch (error) {

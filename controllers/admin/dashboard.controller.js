@@ -5,10 +5,11 @@ const { hashPassword,campare } = require('../../utils/bcrypt')
 const { Validate } = require('../../validations/admin.validation')
 const { commonErrors } = require('../../middlewares/error/commen.error')
 const {sendEmail} = require('../../auth/email/nodemailer.auth')
-const { setObject,redisGet } = require('../../connections/redis.connection') 
+const { setObjectWithExp, redisGet } = require("../../connections/redis.connection"); 
 const {verifyOtp} = require('../../auth/email/otp.auth')
 const Company = require('../../models/compaies.model')
 const User = require('../../models/users.model')
+const Industry = require("../../models/industry.model");
 
 const requirments = {
   number: Joi.number().min(10).required(),
@@ -16,6 +17,7 @@ const requirments = {
   email: Joi.string().email().required(),
   name: Joi.string().min(3).required(),
   otp: Joi.number().required(),
+  industry: Joi.string().required(),
 };
 
 const adminController = {
@@ -38,7 +40,7 @@ const adminController = {
         otp: otp,
         verified: false,
       };
-      let storingOtp = setObject(validationData);
+      let storingOtp = setObjectWithExp(validationData);
       if (storingOtp == false)
         return commonErrors(res, 404, {
           response: "Somthing went worng, please refresh and try again",
@@ -132,6 +134,7 @@ const adminController = {
     }
   },
 
+
   async login(req, res) {
     try {
       const { email, password } = req.body;
@@ -154,17 +157,48 @@ const adminController = {
         });
 
       const isValidPassword = await campare(password, email, admin.password);
-      console.log(isValidPassword, "klf");
       if (!isValidPassword)
         return commonErrors(res, 400, { message: "Password Doesn't Match" });
 
       const payload = { _id: admin._id, name: admin.name, email: admin.email };
-      const token = Jwt.sign(payload, "#$solvusphere$#");
+      
+      // setup of access token and refresh token
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
+      let token = { accessToken, refreshToken }
+      
       return commonErrors(res, 200, {
         message: "Login Successfully",
         token,
         admin,
       });
+    } catch (error) {
+      console.log(error);
+      return commonErrors(error, 500, { message: "Internal Server Error" });
+    }
+  },
+  async create_insustry(req, res) {
+    try {
+      let { industry } = req.body;
+      let trimData = industry.trim();
+      let validateData = Validate(
+        { industry: industry },
+        { industry: trimData }
+      );
+      if (!validateData)
+        return commonErrors(res, 404, {
+          message: "Invalide data, Please fill the field  ",
+        });
+      let insetingData =await  Industry.findOneAndUpdate(
+        { name: trimData },
+        { name: trimData },
+        { new: true, upsert: true }
+      );
+      if (!insetingData)
+        return commonErrors(res, 404, {
+          message: "Internal server error, Please refresh the page and try it ",
+        });
+      return res.status(200).send({ messge: "New industry is added " });
     } catch (error) {
       console.log(error);
       return commonErrors(error, 500, { message: "Internal Server Error" });
