@@ -20,6 +20,7 @@ const requirments = {
   industry: Joi.string().required(),
 };
 
+const adminController = {
   async verifyEmail(req, res) {
     const { email } = req.body;
     let validating = Validate({ email: requirments.email }, { email });
