@@ -26,12 +26,12 @@ module.exports.redisSet = (key, value) => {
   client.set(key, value);
 };
 
-module.exports.redisReSet = (key, value) => {
+module.exports.redisReSetWithExp = (key, value) => {
   client.set(key, value);
   client.expire(key, 200);
 };
 
-module.exports.setObject = (datas) => {
+module.exports.setObjectWithExp = (datas) => {
   console.log(datas);
   client.set(`${datas.email}_verify`, JSON.stringify(datas), (err) => {
     if (err) return false;

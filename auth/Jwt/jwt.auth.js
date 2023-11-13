@@ -9,18 +9,17 @@ let refreshSecret = "";
 module.exports = {
 
     // Function to generate tokens
-     generateAccessToken(payload) {
+     generateAccessToken(payload,res) {
         let token =  jwt.sign(payload, jwtSecret, { expiresIn: '30m' });
         res.cookie("jwt", token, {
           httpOnly: true,
           maxAge: 30 * 60 * 1000
         });
         return token
-
     },
-    
-     generateRefreshToken(payload) {
-        refreshSecret = jwt.sign(payload, jwtSecret, { expiresIn: '30d' });
+     
+    generateRefreshToken(res) {
+        refreshSecret = jwt.sign({refresh:process.env.REFRESH_KEY}, jwtSecret, { expiresIn: '30d' });
         res.cookie("jwt", refreshSecret, {
           httpOnly: true,
           maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -28,7 +27,7 @@ module.exports = {
         return refreshSecret
     },
 
-    reGenerateAccessToken(refreshToken, payload) {
+    reGenerateAccessToken(refreshToken, payload,res) {
         jwt.verify(refreshToken, jwtSecret, (err, user) => {
             if (err) {
                 return  console.error('Error verifying refresh token:', err.message);
@@ -41,7 +40,7 @@ module.exports = {
              maxAge: 30 * 60 * 1000
             });
 
-            refreshSecret = jwt.sign(payload, jwtSecret, { expiresIn: '30d' })
+            refreshSecret = jwt.sign({ refresh: process.env.REFRESH_KEY }, jwtSecret, { expiresIn: '30d' });
             res.cookie("jwt", refreshSecret, {
              httpOnly: true,
              maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -51,19 +50,20 @@ module.exports = {
         });
     },
 
-    async verify_Token(token) {
-       try {
-            jwt.verify(token, jwtSecret, (err, decoded) => {
-                if (err) {
-                        console.error('JWT verification failed:', err.message);
-                } else {
-                   return decoded
-                }
-            });
-       } catch (error) {
-           console.log(error);
-           commonErrors(res,500,{message:"Internal Server Error"})
-       }
+    async verify_Token(req,res,next) {
+        try {
+            const authHeader = req.headers.authorization;
+            console.log(authHeader,"jwt");
+            if (!authHeader) return res.status(401).json("You are not authenticated");
+            // const token = authHeader.split(" ")[1];
+            // console.log(token,"ived aaaarulle");
+            const decodedToken = jwt.verify(authHeader, jwtSecret);
+            if (decodedToken) req.user = decodedToken;
+            next()
+        } catch (error) {
+            console.error('Error verifying JWT:', error.message);
+            return null;
+        }
    }
      
 }

@@ -7,7 +7,7 @@ const { sendEmail } = require("../../auth/email/nodemailer.auth");
 const {
   redisDel,
   redisSet,
-  setObject,
+  setObjectWithExp,
   redisReSet,
   redisGet,
 } = require("../../connections/redis.connection");
@@ -66,7 +66,7 @@ const CompanyController = {
           email: email,
         };
 
-        let storingcompanydata = setObject(validationData);
+        let storingcompanydata = setObjectWithExp(validationData);
         if (storingcompanydata == false)
           return commonErrors(res, 404, {
             response: "Somthing went worng, please refresh and try again",
